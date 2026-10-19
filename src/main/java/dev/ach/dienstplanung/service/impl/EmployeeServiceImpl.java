@@ -7,19 +7,23 @@ import dev.ach.dienstplanung.mapper.EmployeeMapper;
 import dev.ach.dienstplanung.repository.EmployeeRepository;
 import dev.ach.dienstplanung.service.EmployeeService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class EmployeeServiceImpl implements EmployeeService {
 
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
+    @Transactional
     public EmployeeDto createEmployee(EmployeeDto employeeDto) {
 
         Employee employee = EmployeeMapper.mapToEmployee(employeeDto);
@@ -28,6 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmployeeDto> getAllEmployee() {
         List<Employee> employeeList = employeeRepository.findAll();
         return employeeList.stream().map(
@@ -36,6 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EmployeeDto getEmployeeById(String employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(()-> new ElementNotFoundException("Employee with given Id not found: " + employeeId));
@@ -43,24 +49,31 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public EmployeeDto updateEmployee(EmployeeDto employeeDto, String employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(()-> new ElementNotFoundException("Employee with given Id not found: " + employeeId));
 
-        employee.setId(employeeDto.getId());
         employee.setName(employeeDto.getName());
         employee.setQualification(employeeDto.getQualification());
-        employeeDto.setWochenStunden(employeeDto.getWochenStunden());
-        employeeDto.setWunschFreiTage(employeeDto.getWunschFreiTage());
-        employeeDto.setWunschSchicht(employeeDto.getWunschSchicht());
-        employeeDto.setBevorzugtMitarbeiter(employeeDto.getBevorzugtMitarbeiter());
-        return EmployeeMapper.mapToEmployeeDto(employee);
+        employee.setWochenStunden(employeeDto.getWochenStunden());
+        employee.setWunschFreitage(employeeDto.getWunschFreiTage());
+        employee.setWunschSchicht(employeeDto.getWunschSchicht());
+        employee.setBevorzugtMitarbeiter(employeeDto.getBevorzugtMitarbeiter());
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        return EmployeeMapper.mapToEmployeeDto(updatedEmployee);
     }
 
     @Override
+    @Transactional
     public void deleteEmployee(String employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(()-> new ElementNotFoundException("Employee with given Id not found: " + employeeId));
-        employeeRepository.deleteById(employee.getId());
+        try {
+            employeeRepository.deleteById(employee.getId());
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("Dieser Mitarbeiter kann nicht gelöcht werden, dar er noch Dienste hat.");
+        }
     }
 }

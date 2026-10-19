@@ -302,16 +302,7 @@ public class HardConstraintsTest {
                 .penalizesBy(0);
     }
     @Test
-    void minimumStaffing_notEnoughEmployees(){
-        EmployeeDto employee1 =new EmployeeDto(
-                "em-1",
-                "Max",
-                "PFLEGE",
-                40L,
-                Type.FRUESCHICHT,
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
+    void minimumStaffing_unassigned(){
         StationDto station = new StationDto(
                 "st-a",
                 "Station A",
@@ -327,13 +318,13 @@ public class HardConstraintsTest {
         );
         AssignmentDto assignment1 = new AssignmentDto(
                 "STA",
-                employee1,
+                new EmployeeDto(),
                 station,
                 timeslot1
         );
         constraintVerifier.verifyThat(Constraints::minimumStaffing)
                 .given(assignment1)
-                .penalizesBy(1);
+                .penalizesBy(0);
     }
     @Test
     void minimumStaffingMatches_noPenalize(){

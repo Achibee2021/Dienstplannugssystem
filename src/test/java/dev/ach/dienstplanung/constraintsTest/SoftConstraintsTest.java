@@ -488,10 +488,10 @@ public class SoftConstraintsTest {
         );
         TimeslotDto timeslot2 = new TimeslotDto(
                 "ts-2",
-                DayOfWeek.THURSDAY,
-                LocalTime.of(22,0),
+                DayOfWeek.MONDAY,
                 LocalTime.of(6,0),
-                Type.NACHTSCHICHT
+                LocalTime.of(14,0),
+                Type.FRUESCHICHT
         );
 
         AssignmentDto assignment1 = new AssignmentDto(
@@ -509,7 +509,7 @@ public class SoftConstraintsTest {
 
         constraintVerifier.verifyThat(Constraints::checkTogetherPreference)
                 .given(assignment1, assignment2)
-                .penalizesBy(1);
+                .penalizesBy(1L);
     }
 
     @Test

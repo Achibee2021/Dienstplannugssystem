@@ -45,7 +45,7 @@ public class TimeslotServiceImpl implements TimeslotService {
         Timeslot timeslot =timeslotRepository.findById(timeslotId)
                 .orElseThrow(()-> new ElementNotFoundException("Timeslot with given Id not found: " + timeslotId));
 
-        timeslot.setId(timeslotDto.getId());
+
         timeslot.setDayOfWeek(timeslotDto.getDayOfWeek());
         timeslot.setStartTime(timeslotDto.getStartTime());
         timeslot.setEndTime(timeslotDto.getEndTime());

@@ -142,7 +142,7 @@ public class Constraints implements ConstraintProvider {
     public Constraint checkPreferredShift(ConstraintFactory constraintFactory){
         return constraintFactory.forEach(AssignmentDto.class)
                 .filter(A->A.getEmployee() != null && A.getTimeslot() != null)
-                .filter(A-> true)
+                .filter(A-> !A.getEmployee().getWunschSchicht().equals(A.getTimeslot().getType()))
                 .penalize(HardSoftScore.ONE_SOFT)
                 .asConstraint("Schicht preference");
     }

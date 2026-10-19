@@ -1,17 +1,26 @@
 package dev.ach.dienstplanung.service.impl;
 
 import dev.ach.dienstplanung.dto.AssignmentDto;
+import dev.ach.dienstplanung.dto.EmployeeDto;
 import dev.ach.dienstplanung.dto.StationDto;
 import dev.ach.dienstplanung.dto.TimeslotDto;
 import dev.ach.dienstplanung.entity.Assignment;
+import dev.ach.dienstplanung.entity.Employee;
+import dev.ach.dienstplanung.entity.Station;
+import dev.ach.dienstplanung.entity.Timeslot;
+import dev.ach.dienstplanung.exception.ElementNotFoundException;
 import dev.ach.dienstplanung.mapper.AssignmentMapper;
 import dev.ach.dienstplanung.repository.AssignmentRepository;
+import dev.ach.dienstplanung.repository.EmployeeRepository;
+import dev.ach.dienstplanung.repository.StationRepository;
+import dev.ach.dienstplanung.repository.TimeslotRepository;
 import dev.ach.dienstplanung.service.AssignmentService;
 import dev.ach.dienstplanung.service.EmployeeService;
 import dev.ach.dienstplanung.service.StationService;
 import dev.ach.dienstplanung.service.TimeslotService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -21,49 +30,69 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class AssignmentServiceImpl implements AssignmentService {
 
-    private AssignmentRepository assignmentRepository;
-    private StationService stationService;
-    private TimeslotService timeslotService;
-    private EmployeeService employeeService;
+    private final AssignmentRepository assignmentRepository;
+    private final StationRepository stationRepository;
+    private final TimeslotRepository timeslotRepository;
+    private final EmployeeRepository employeeRepository;
 
-    //@Override
-    /*public AssignmentDto createAssignment(AssignmentDto assignmentDto) {
-        Station station = StationMapper.mapToStation(stationService.getStationById(assignmentDto.getStation().getId()));
+    private final StationService stationService;
+    private final TimeslotService timeslotService;
+    private final EmployeeService employeeService;
 
-        Timeslot timeslot = TimeslotMapper.mapToTimeslot(timeslotService.getTimeslotId(assignmentDto.getTimeslot().getId()));
+    //------------------------------------------------------------------------------------------------------------------
+    //                                              HELPERS FUNCTION
+    //------------------------------------------------------------------------------------------------------------------
 
-        Employee employee = null;
+    private Station resolveStation(String stationId){
+        return stationRepository.findById(stationId)
+                .orElseThrow(()-> new ElementNotFoundException("Station not found: " + stationId));
+    }
+    private Employee resolveEmployee(String employeeId){
+        if (employeeId == null) return null;
+        return employeeRepository.findById(employeeId)
+                .orElseThrow(()-> new ElementNotFoundException("Employee not found: " + employeeId));
+    }
+    private Timeslot resolveTimeslot(String timeslotId){
+        return timeslotRepository.findById(timeslotId)
+                .orElseThrow(()->new ElementNotFoundException("Timeslot not found: " + timeslotId));
+    }
+    //------------------------------------------------------------------------------------------------------------------
 
-        if (assignmentDto.getEmployee() != null){
+    @Override
+    @Transactional
+    public AssignmentDto createAssignment(AssignmentDto assignmentDto) {
 
-            employee = EmployeeMapper.mapToEmployee(employeeService.getEmployeeById(
-                    assignmentDto.getEmployee().getId()
-            ));
-        }
+        Station station = resolveStation(assignmentDto.getStation().getId());
+        Timeslot timeslot = resolveTimeslot(assignmentDto.getTimeslot().getId());
+        Employee employee = assignmentDto.getEmployee() != null
+                ? resolveEmployee(assignmentDto.getEmployee().getId())
+                : null;
 
-        Assignment assignment = new Assignment(
+        Assignment entity = new Assignment(
                 assignmentDto.getId(),
                 station,
                 timeslot,
                 employee
         );
 
-        Assignment savedAssignment = assignmentRepository.save(assignment);
-        return AssignmentMapper.mapToAssignmentDto(savedAssignment);
-    }*/
+        Assignment savedAssignment = assignmentRepository.save(entity);
 
-    @Override
-    public AssignmentDto createAssignment(AssignmentDto assignmentDto) {
-        return null;
+        StationDto stationDto = stationService.getStationById(savedAssignment.getStation().getId());
+        TimeslotDto timeslotDto = timeslotService.getTimeslotId(savedAssignment.getTimeslot().getId());
+        EmployeeDto employeeDto = savedAssignment.getEmployee() != null
+                ? employeeService.getEmployeeById(savedAssignment.getEmployee().getId())
+                : null;
+        return AssignmentMapper.mapToAssignmentDto(savedAssignment, stationDto,timeslotDto,employeeDto);
     }
 
     @Override
-    public List<AssignmentDto> getAllAssignment(Map<String, StationDto> stationsById, Map<String, TimeslotDto> timeslotsById) {
+    @Transactional(readOnly = true)
+    public List<AssignmentDto> getAllAssignmentForSolver(Map<String, StationDto> stationsById, Map<String, TimeslotDto> timeslotsById) {
 
         List<Assignment> assignmentList = assignmentRepository.findAll();
 
         return assignmentList.stream().map(
-                assignment -> AssignmentMapper.mapToAssignmentDto(
+                assignment -> AssignmentMapper.mapToAssignmentDtoForSolver(
                         assignment,
                         stationsById,
                         timeslotsById
@@ -72,17 +101,76 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDto> getAllAssignment() {
+
+        Map<String, StationDto> stationsById = stationService.getAllStation().stream()
+                .collect(Collectors.toMap(StationDto::getId, s->s));
+
+        Map<String, TimeslotDto> timeslotsById = timeslotService.getAllTimeslot().stream()
+                .collect(Collectors.toMap(TimeslotDto::getId, t->t));
+
+        Map<String, EmployeeDto> employeesById = employeeService.getAllEmployee().stream()
+                .collect(Collectors.toMap(EmployeeDto::getId, e->e));
+        return assignmentRepository.findAll().stream().map(
+                entity-> {
+                    StationDto stationDto = stationsById.get(entity.getStation().getId());
+                    TimeslotDto timeslotDto = timeslotsById.get(entity.getTimeslot().getId());
+                    EmployeeDto employeeDto = entity.getEmployee() != null
+                            ? employeesById.get(entity.getEmployee().getId())
+                            : null;
+                    return AssignmentMapper.mapToAssignmentDto(entity, stationDto, timeslotDto, employeeDto);
+                }).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public AssignmentDto getAssignmentById(String assignId) {
-        return null;
+
+        Assignment entity = assignmentRepository.findById(assignId)
+                .orElseThrow(()-> new ElementNotFoundException("Assignment not found: " + assignId));
+
+        StationDto stationDto = stationService.getStationById(entity.getStation().getId());
+        TimeslotDto timeslotDto = timeslotService.getTimeslotId(entity.getTimeslot().getId());
+        EmployeeDto employeeDto = entity.getEmployee() != null
+                ? employeeService.getEmployeeById(entity.getEmployee().getId())
+                : null;
+
+        return AssignmentMapper.mapToAssignmentDto(entity, stationDto, timeslotDto, employeeDto);
     }
 
     @Override
+    @Transactional
     public AssignmentDto updateAssignment(AssignmentDto assignmentDto, String assignId) {
-        return null;
+
+        Assignment entity = assignmentRepository.findById(assignId)
+                .orElseThrow(()-> new ElementNotFoundException("Assignment not found: " + assignId));
+
+        entity.setStation(resolveStation(assignmentDto.getStation().getId()));
+        entity.setTimeslot(resolveTimeslot(assignmentDto.getTimeslot().getId()));
+        entity.setEmployee(assignmentDto.getEmployee() != null
+                ? resolveEmployee(assignmentDto.getEmployee().getId())
+                : null);
+
+        Assignment savedAssignment = assignmentRepository.save(entity);
+
+        StationDto stationDto = stationService.getStationById(savedAssignment.getStation().getId());
+        TimeslotDto timeslotDto = timeslotService.getTimeslotId(savedAssignment.getTimeslot().getId());
+        EmployeeDto employeeDto = savedAssignment.getEmployee() != null
+                ? employeeService.getEmployeeById(savedAssignment.getEmployee().getId())
+                : null;
+
+        return AssignmentMapper.mapToAssignmentDto(savedAssignment, stationDto, timeslotDto, employeeDto);
     }
 
     @Override
+    @Transactional
     public void deleteAssignment(String assignId) {
+        if (!assignmentRepository.existsById(assignId)){
+            throw new ElementNotFoundException("Assignment not found: " + assignId);
+        }
+
+        assignmentRepository.deleteById(assignId);
 
     }
 }

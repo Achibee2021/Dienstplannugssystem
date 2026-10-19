@@ -40,7 +40,8 @@ public class Employee {
     private List<String> bevorzugtMitarbeiter;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "wunsch_frei_tage", columnDefinition = "text[]")
+    @Column(name = "wunsch_frei_tage", columnDefinition = "varchar[]")
+    @Enumerated(EnumType.STRING)
     private List<DayOfWeek> wunschFreitage;
 
 }

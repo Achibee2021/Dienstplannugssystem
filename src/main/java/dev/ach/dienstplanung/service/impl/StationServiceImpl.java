@@ -45,7 +45,7 @@ public class StationServiceImpl implements StationService {
         Station station = stationRepository.findById(stationId)
                 .orElseThrow(()-> new ElementNotFoundException("Station with given Id not found: " + stationId));
 
-        station.setId(stationDto.getId());
+
         station.setName(stationDto.getName());
         station.setBenoetigteAnzahlMitarbeiter(stationDto.getBenoetigteAnzahlMitarbeiter());
         station.setBenoetigtQualification(stationDto.getBenoetigtQualification());

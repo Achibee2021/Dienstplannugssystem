@@ -1,6 +1,7 @@
 package dev.ach.dienstplanung.mapper;
 
 import dev.ach.dienstplanung.dto.AssignmentDto;
+import dev.ach.dienstplanung.dto.EmployeeDto;
 import dev.ach.dienstplanung.dto.StationDto;
 import dev.ach.dienstplanung.dto.TimeslotDto;
 import dev.ach.dienstplanung.entity.Assignment;
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 public class AssignmentMapper {
 
-    public static AssignmentDto mapToAssignmentDto(Assignment assignment, Map<String,StationDto> stationMapId, Map<String,TimeslotDto> timeslotMapId) {
+    public static AssignmentDto mapToAssignmentDtoForSolver(Assignment assignment, Map<String,StationDto> stationMapId, Map<String,TimeslotDto> timeslotMapId) {
        String stationId = assignment.getStation().getId();
        String timeslotId = assignment.getTimeslot().getId();
 
@@ -31,6 +32,16 @@ public class AssignmentMapper {
                 timeslotDto
         );
 
+    }
+
+    public static AssignmentDto mapToAssignmentDto(Assignment assignment, StationDto stationDto, TimeslotDto timeslotDto, EmployeeDto employeeDto){
+
+        return new AssignmentDto(
+                assignment.getId(),
+                employeeDto,
+                stationDto,
+                timeslotDto
+        );
     }
 
     public static void applyEmployee(AssignmentDto dto, Assignment entity, Map<String, Employee> employeeEntitiesById){

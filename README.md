@@ -9,6 +9,8 @@ zuzuordnen. Dabei werden sowohl zwingende Anforderungen (**Hard Constraints**) a
 Die Datenbank (**PostgreSQL**) ist die einzige Quelle der Wahrheit: Mitarbeiter, Stationen, Timeslots und Assignments werden dort 
 gespeichert, der Solver liest sie von dort und schreibt das Ergebnis wieder zurück.
 
+Das System verfügt über ein **React (TypeScript) Frontend**, das eine interaktive Planung, Live-Solver_Updates und vollständiges CRUD ermöglicht.
+
 ---
 
 ## 1. Ziel des Projekts
@@ -36,23 +38,28 @@ Das System versucht zunächst, alle **Hard Constraints** einzuhalten und anschli
 ## 2. Technologien
 
 | Technologie     | Verwendung                      |
-| --------------- | ------------------------------- |
+|-----------------|---------------------------------|
 | Java            | Programmiersprache              |
 | Spring Boot     | Backend / REST API              |
 | Timefold Solver | Optimierung der Dienstplanung   |
 | PostgreSQL      | Persistenz                      |
 | Flyway          | Datenbankmigrationen            |
 | Maven           | Dependency Management und Build |
-| JUnit           | Tests                           |
-| Mockito         | Unit Tests                      |
+| React + Vite    | Frontend Framework              |
+| TypeScript      | Programmiersprache (Frontend)   |
+| Tailwind CSS    | Styling                         |
+| TanStack Query  | Data Fetching & State           |
+| JUnit           | Backend Tests                   |
+| Vitest          | Frontend Tests                  |
 
-Voraussetzung ist **Java > 21** (siehe `pom.xml` → `<java.version>`). Spring Boot 3.x und Timefold 2.x unterstützen beide Versionen.
+Voraussetzung ist **Java > 21** (siehe `pom.xml` → `<java.version>`). Spring Boot 3.x und Timefold 2.x unterstützen beide Versionen. Noch
+dazu **Node.js > 20**.
 
 ---
 
 ## 3. Architektur
 
-Das Projekt ist in mehrere Bereiche aufgeteilt:
+Das Projekt ist strikt in **Backend** und **Frontend** getrennt:
 
 ```text
 src/main/java/dev/ach/dienstplanung
@@ -81,6 +88,12 @@ src/main/java/dev/ach/dienstplanung
 |--
 └── constraint/
     └── Constraints
+    
+ └── frontend/ (React App)
+    ├── src/api/         # Axios Clients
+    ├── src/hooks/       # TanStack Query Hooks
+    ├── src/pages/       # Seiten (Dashboard, Plan, CRUD)
+    └── src/features/    # Feature-Komponenten (Grid, Forms)
 ```
 **Wichtig**: ``Entity`` und ``DTO`` sind bewusst getrennte Klassen.
 * **Entities** (``entity``) sind JPA-Klassen mit ``@Entity``, ``@Id`` und Beziehungen.
@@ -305,30 +318,7 @@ Mitarbeiterzuordnung in der Tabelle ``assignment`` zu speichern.
 
 ---
 
-## 8. Score
-
-Die Qualität einer Planung wird mit einem `HardSoftScore` bewertet.
-
-```text
-Hard Score / Soft Score
-```
-
-Dabei gilt grundsätzlich:
-
-1. Hard Constraints haben Priorität.
-2. Erst wenn die Hard Constraints erfüllt sind, wird die Qualität anhand der Soft Constraints optimiert.
-
-Eine mögliche Lösung sieht beispielsweise so aus:
-
-```text
-0hard/0soft
-```
-
-Das bedeutet, dass keine Hard- oder Soft-Constraint-Verletzungen vorliegen.
-
----
-
-## 9. Datenbank
+## 8. Datenbank
 
 Das Projekt verwendet **PostgreSQL** als Datenbank.
 
@@ -351,21 +341,13 @@ Flyway führt die vorhandenen Migrationen beim Start der Anwendung aus.
 | ``assignment`` | ``id (PK, String)``, ``station_id (FK)``,``timeslot_id (FK)``,``employee_id (FK, nullable)``                                                       |
 Die konkreten Spaltentypen und Constraints sind in den Flyway-Migrationen dokumentiert.
 
-### 9.2 Schreib-Semantik
-
-Der Solver schreibt bei **jedem neuen besten Zwischenergebnis**
-in die Datenbank. Das bedeutet:
-* Zwischenstände werden überschrieben.
-* Nur der letzte Schreibvorgang zählt.
-* ``assignment.employee_id`` enthält nach Abschluss den final zugewiesenen Mitarbeiter.
-Falls ein Assignment vom Solver **keinem** Mitarbeiter zugewiesen
-* werden konnte, wird ``employee_id`` auf ``NULL`` gesetzt. Das
-* macht den Endzustand eindeutig: eine ``NULL``-Zuordnung
-bedeutet "nicht zugewiesen".
+### 8.2 Lösch-Verhalten
+* **Station & Timeslot**: ``ON DELETE CASCADE``. Wenn eine Station gelöscht wird, werden alle zugehörigen Assignments gelöscht.
+* **Employee**: ``ON DELETE RESTRICT``: Ein Mitarbeiter kann nicht gelöscht werden, solange er noch Dienste hat.
 
 ---
 
-## 10. Tests
+## 9. Tests
 
 Das Projekt enthält Tests für die verschiedenen Komponenten.
 
@@ -378,9 +360,10 @@ Insbesondere werden getestet:
 * Erstellung und Verarbeitung eines Dienstplans
 
 Die Tests können beispielsweise mit Maven ausgeführt werden:
+### Backend(Java)
 
 ```bash
-./mvnw test
+./mvnw clean package
 ```
 
 Unter Windows:
@@ -388,34 +371,51 @@ Unter Windows:
 ```bash
 mvnw.cmd test
 ```
+### Frontend (React)
 
+``` bash
+cd frontend
+npm test
+```
 ---
 
-## 11. Voraussetzungen
+## 10. Voraussetzungen
 Für die lokal Entwicklung werden benötigt:
 * Java 21 oder mehr (siehe ``pom.xml``)
 * Maven (oder Maven Wrapper ``mvnw``/``mvnw.cmd``)
 * PostgreSQL (oder Docker mir Docker Compose)
 * Git
 ----
-## 12. Anwendung starten
+## 11. Anwendung starten
 ```bash
 git clone <repository-url>
 cd dienstplanung
 ```
-### 12.1 Datenbank starten (Docker)
+### 11.1 Datenbank starten (Docker)
 
 Falls eine ``compose.yml`` im Repository vorhanden ist:
 ```bash
 docker compose up -d
 ```
-### 12.2 Konfiguration
-Die Verbindungsdaten werden in ``src/main/resources/application.properties``
-konfiguriert.
+### 11.2 Backend starten
+
+```bash
+./mvnw spring-boot:run
+```
+Läuft auf ``http://localhost:8080``
+
+### 11.3 Frontend starten:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Läuft auf ``http://localhost:5173``
 
 ---
 
-## 13. Dokumentation
+## 12. Dokumentation
 
 Weitere technische Informationen befinden sich in den folgenden Dokumenten:
 
@@ -451,45 +451,21 @@ Beschreibung der Hard- und Soft-Constraints und ihrer Bedeutung für die Optimie
 
 ---
 
-## 14. Projektstatus
+## 13. Projektstatus
 
-**Aktueller Stand**
+**Aktueller Stand (V1.0)**
 
 * [x] Domain Model
 * [x] Planning Model
-* [x] Hard Constraints
-* [x] Soft Constraints
-* [x] DTOs
-* [x] Services
-* [x] REST Controller
-* [x] Solver-Integration
+* [x] Hard & Soft Constraints
 * [x] Datenbankintegration (Lesen und Schreiben)
-* [x] Tests
-* [ ] Erweiterung der REST API
-* [ ] Verbesserung der Solver-Performance
-* [ ] Frontend
-* [ ] Deployment
+* [x] REST Controller (CRUD & Solver)
+* [x] Frontend (Dashboard, Grid-Ansichten, CRUD-Formulare)
+* [x] Live-Solver Polling & Echtzeit-Score
+* [x] Tests (Backend & Frontend)
+* [ ] Rollen- und Rechtesystem (Auth)
+* [ ] Deployment (Docker / Cloud)
+* [ ] Export (PDF /Excel)
+* [ ] 
 
 ---
-
-## 15. Ziel
-
-Das Projekt soll schrittweise zu einer vollständigen Anwendung für die automatisierte und optimierte Dienstplanung erweitert werden.
-
-Der Schwerpunkt liegt dabei auf einer klaren Trennung zwischen:
-
-```text
-Domain Model
-      ↓
-Planning Model
-      ↓
-Constraints
-      ↓
-Solver
-      ↓
-REST API
-      ↓
-Client
-```
-
-Dadurch bleibt das System erweiterbar und neue Planungsregeln können hinzugefügt werden, ohne die grundlegende Architektur verändern zu müssen.

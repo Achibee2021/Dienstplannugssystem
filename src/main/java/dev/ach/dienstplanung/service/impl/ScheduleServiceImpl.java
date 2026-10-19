@@ -38,7 +38,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         Map<String, TimeslotDto> timeslotsById = timeslots.stream().collect(
                 Collectors.toMap(TimeslotDto::getId, t->t)
         );
-        List<AssignmentDto> assignments = assignmentService.getAllAssignment(stationsById, timeslotsById);
+        List<AssignmentDto> assignments = assignmentService.getAllAssignmentForSolver(stationsById, timeslotsById);
 
         return Schedule.builder()
                 .assigmentList(assignments)

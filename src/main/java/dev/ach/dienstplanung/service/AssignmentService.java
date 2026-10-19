@@ -10,7 +10,8 @@ import java.util.Map;
 public interface AssignmentService {
     AssignmentDto createAssignment(AssignmentDto assignmentDto);
 
-    List<AssignmentDto> getAllAssignment(Map<String, StationDto> stationsById, Map<String, TimeslotDto> timeslotsById);
+    List<AssignmentDto> getAllAssignmentForSolver(Map<String, StationDto> stationsById, Map<String, TimeslotDto> timeslotsById);
+    List<AssignmentDto> getAllAssignment();
 
     AssignmentDto getAssignmentById(String assignId);
 

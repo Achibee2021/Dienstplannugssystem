@@ -61,9 +61,9 @@ public class DienstPlanControllerTest {
 
         Mockito.when(dienstPlanningsService.getSchedule(jobId)).thenReturn(mockResponse);
 
-        mockMvc.perform(get("/dienstplan/" + jobId))
+        mockMvc.perform(get("/dienstplan/solve/" + jobId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.jobId").value(jobId.toString()))
-                .andExpect(jsonPath("$.solving").value(false));
+                .andExpect(jsonPath("$.isSolving").value(false));
     }
 }

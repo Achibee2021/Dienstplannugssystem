@@ -1,10 +1,7 @@
 package dev.ach.dienstplanung.dto;
 
 import ai.timefold.solver.core.api.domain.common.PlanningId;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -13,6 +10,8 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @Getter
 @Setter
+@Data
+@EqualsAndHashCode // to compare fields instead of memory addresses
 public class TimeslotDto {
 
    @PlanningId
