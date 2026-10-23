@@ -1,6 +1,7 @@
 import type { Assignment } from "@/types/assignment";
 import { Pencil, Trash2 } from "lucide-react";
 import { timeslotLabel } from "../weekly-plan/labels";
+import { useAuth } from "../auth/AuthContext";
 
 
 type Props = {
@@ -11,7 +12,8 @@ type Props = {
 
 
 export function AssignmentRow ({assignment, onEdit, onDelete}: Props) {
-    //const freeDays = employee.wunschFreiTage ?? [];
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
       
 
     return (
@@ -29,7 +31,7 @@ export function AssignmentRow ({assignment, onEdit, onDelete}: Props) {
                 {assignment.employee?.name}
             </td>
             <td className="px-4 py-3 text-right">
-                <div className="inline-flex gap-1">
+                {isAdmin ? (<div className="inline-flex gap-1">
                     <button
                         type="button"
                         onClick={() => onEdit(assignment)}
@@ -48,7 +50,7 @@ export function AssignmentRow ({assignment, onEdit, onDelete}: Props) {
                     >
                         <Trash2 className="h-4 w-4"/>
                     </button>
-                </div>
+                </div>): <div className="text-slate-400">-</div>}
             </td>
         </tr>
     );

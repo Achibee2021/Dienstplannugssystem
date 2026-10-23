@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/features/auth/AuthContext";
 import { DeleteTimeslotDialog } from "@/features/timeslots/DeleteTimeslotDialog";
 import { TimeslotFormDialog } from "@/features/timeslots/TimeslotFormDialog";
 import { TimeslotTable } from "@/features/timeslots/TimeslotTable";
@@ -6,6 +7,10 @@ import { useTimeslots } from "@/hooks/timslots/useTimeslots";
 import type { Timeslot } from "@/types/timeslots";
 import { Clock } from "lucide-react";
 import { useMemo, useState } from "react";
+
+
+const {role} = useAuth();
+const isAdmin = role === "ADMIN";
 
 export default function TimeslotPage(){
     const {data, isLoading, error} = useTimeslots();
@@ -92,7 +97,7 @@ export default function TimeslotPage(){
                             ? "Versuche es mit einem anderen Suchbegriff."
                             : "Füge deinen ersten Zeitslot hinzu, um mit der Planung zu beginnen."}
                     </p>
-                    {!search && (
+                    {!search && isAdmin && (
                         <button onClick={handleCreate} className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                             + Neu
                         </button>
@@ -101,7 +106,7 @@ export default function TimeslotPage(){
             ) : (
                 <TimeslotTable timeslots={filtered} onEdit={handleEdit} onDelete={handleDelete}/>
             )}
-            <TimeslotFormDialog key={editingTimeslot?.id ?? "new"} open={formOpen} timeslot={editingTimeslot} onClose={handleCloseForm} onSaved={handleCloseForm} />
+            <TimeslotFormDialog key={`${editingTimeslot?.id ?? "new"}-${formOpen}`} open={formOpen} timeslot={editingTimeslot} onClose={handleCloseForm} onSaved={handleCloseForm} />
             <DeleteTimeslotDialog timeslot={deletingTimeslot} onClose={() => setDeletingTimeslot(null)}/>
 
         </>
@@ -116,14 +121,14 @@ function PageHeader({onCreate}: {onCreate: () => void}) {
                 <h1 className="text-2xl font-bold">Timeslot</h1>
                 <p className="text-sm text-slate-500">Verwalte die Timeslot deines Dienstplans.</p>
             </div>
-            <button
+            {isAdmin && (<button
                 type="button"
                 onClick={onCreate}
                 className="inline-flex items-center gap-2 rounded-md bg-slate-900
                 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
                 + Neu
-            </button>
+            </button>)}
         </div>
     );
 }

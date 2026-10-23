@@ -1,5 +1,6 @@
 import type { Station } from "@/types/station";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
 
 type Props = {
     station: Station;
@@ -9,7 +10,8 @@ type Props = {
 
 
 export function StationRow ({station, onEdit, onDelete}: Props) {
-    //const freeDays = station.wunschFreiTage ?? [];
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
 
     return (
         <tr className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
@@ -23,7 +25,7 @@ export function StationRow ({station, onEdit, onDelete}: Props) {
                 {station.benoetigteAnzahlMitarbeiter}
             </td>
             <td className="px-4 py-3 text-right">
-                <div className="inline-flex gap-1">
+                {isAdmin ? (<div className="inline-flex gap-1">
                     <button
                         type="button"
                         onClick={() => onEdit(station)}
@@ -42,7 +44,7 @@ export function StationRow ({station, onEdit, onDelete}: Props) {
                     >
                         <Trash2 className="h-4 w-4"/>
                     </button>
-                </div>
+                </div>): <div className="text-slate-400">-</div>}
             </td>
         </tr>
     );

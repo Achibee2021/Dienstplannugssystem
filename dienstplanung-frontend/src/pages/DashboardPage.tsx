@@ -1,4 +1,5 @@
 import { solveApi } from "@/api/solveApi";
+import { useAuth } from "@/features/auth/AuthContext";
 import { ScoreSummary } from "@/features/weekly-plan/ScoreSummary";
 import { useAssignments } from "@/hooks/assignments/useAssignments";
 import { useEmployees } from "@/hooks/employees/useEmployees";
@@ -9,9 +10,12 @@ import { Loader2, Play } from "lucide-react";
 import { useState } from "react";
 
 export default function DashboardPage() {
-    const JOB_ID_STORAGE_KEY = "dienstplanung.activeJoId";
+    const JOB_ID_STORAGE_KEY = "dienstplanung.activeJobId";
     const [isLocalSolving, setIsLocalSolving] = useState(false)
     const [jobId, setJobId] = useState<string |null >(() => localStorage.getItem(JOB_ID_STORAGE_KEY));
+
+    const {role} = useAuth();
+    const canSolve = role === "ADMIN" || role === "PLANNER";
 
     const employees = useEmployees();
     const stations = useStations();
@@ -41,19 +45,20 @@ export default function DashboardPage() {
                 <div className="md:col-span-2 rounded-lg border border-slate-200 bg-white p-6 flex flex-col justify-between">
                     <div>
                         <h2 className="text-lg font-semibold mb-2">Optimierung</h2>
-                        <p className="text-sm text-slate-500 mb-4">Starte den Timefold Solver, um die aktuellen Zuweisungen zu optimieren.</p>
+                        <p className="text-sm text-slate-500 mb-4">{canSolve  ? "Starte den Timefold Solver, um die aktuellen Zuweisungen zu optimieren."
+                        : "Aktueller Status des gelösten Dienstplans."}</p>
                     </div>
 
                     <div className="flex items-center justify-between mt-8">
-                        <button
+                        {canSolve ? (<button
                             onClick={handleStartSolve}
                             disabled={isSolving || isLocalSolving}
                             className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2
                             text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
                         >
-                            {isSolving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4"/>}
-                            {isSolving ? "Solver läuft..." : "Optimierung starten"}
-                        </button>
+                            {(isSolving || isLocalSolving) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4"/>}
+                            {(isSolving || isLocalSolving) ? "Solver läuft..." : "Optimierung starten"}
+                        </button>): (<div />)}
 
                         <div className="flex items-center gap-3">
                             <span className="text-sm text-slate-500">Aktuelle Bewertung:</span>

@@ -2,10 +2,15 @@ import { Input } from "@/components/ui/input";
 import { AssignmentFormDialog } from "@/features/assignments/AssignmentFormDialog";
 import { AssignmentTable } from "@/features/assignments/AssignmentTable";
 import { DeleteAssignmentDialog } from "@/features/assignments/DeleteAssignmentDialog";
+import { useAuth } from "@/features/auth/AuthContext";
 import { useAssignments } from "@/hooks/assignments/useAssignments";
 import type { Assignment } from "@/types/assignment";
 import { LinkIcon } from "lucide-react";
 import { useMemo, useState } from "react";
+
+
+const {role} = useAuth();
+const isAdmin = role === "ADMIN";
 
 export default function AssignmentPage(){
     const {data, isLoading, error} = useAssignments();
@@ -93,7 +98,7 @@ export default function AssignmentPage(){
                             ? "Versuche es mit einem anderen Suchbegriff."
                             : "Füge deinen ersten Assignment hinzu, um mit der Planung zu beginnen oder starten Sie den Solver."}
                     </p>
-                    {!search && (
+                    {!search && isAdmin &&(
                         <button onClick={handleCreate} className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                             + Neu
                         </button>
@@ -102,7 +107,7 @@ export default function AssignmentPage(){
             ) : (
                 <AssignmentTable asignments={filtered} onEdit={handleEdit} onDelete={handleDelete}/>
             )}
-            <AssignmentFormDialog key={editingAssignment?.id ?? "new"} open={formOpen} assignment={editingAssignment} onClose={handleCloseForm} onSaved={handleCloseForm} />
+            <AssignmentFormDialog key={`${editingAssignment?.id ?? "new"}-${formOpen}`} open={formOpen} assignment={editingAssignment} onClose={handleCloseForm} onSaved={handleCloseForm} />
             <DeleteAssignmentDialog assignment={deletingAssignment} onClose={() => setDeletingAssignment(null)}/>
 
         </>
@@ -117,14 +122,14 @@ function PageHeader({onCreate}: {onCreate: () => void}) {
                 <h1 className="text-2xl font-bold">Assignment</h1>
                 <p className="text-sm text-slate-500">Verwalte die Assignment deines Dienstplans.</p>
             </div>
-            <button
+            {isAdmin && (<button
                 type="button"
                 onClick={onCreate}
                 className="inline-flex items-center gap-2 rounded-md bg-slate-900
                 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
                 + Neu
-            </button>
+            </button>)}
         </div>
     );
 }

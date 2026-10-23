@@ -8,20 +8,28 @@ import TimeslotPage from './pages/TimeslotPage';
 import AssignmentPage from './pages/AssignmentPage';
 import DashboardPage from './pages/DashboardPage';
 import { AppShell } from './components/layout/AppShell';
+import { AuthProvider } from './features/auth/AuthContext';
+import LoginPage from './pages/LoginPage';
+import { ProtectedRoute } from './components/layout/ProtectedRoute';
 
 function App() {
   return (
-    <AppShell>
-      <Routes>
-          <Route path='/' element={<Navigate to="/dashboard" replace/>}/>
-          <Route path='/dashboard' element={<DashboardPage/>}/>
-          <Route path='/employees' element={<EmployeePage/>}/>
-          <Route path='/plan' element={<WeeklyPlanPage/>}/>
-          <Route path='/stations' element={<StationPage />}/>
-          <Route path='/timeslots' element={<TimeslotPage />}/>
-          <Route path='/assignments' element={<AssignmentPage />}/>
-      </Routes>
-    </AppShell>
+    <AuthProvider>
+      <AppShell>
+        <Routes>
+          <Route path='/login' element={<LoginPage />}/>
+          <Route element={<ProtectedRoute />}>
+            <Route path='/' element={<Navigate to="/dashboard" replace/>}/>
+            <Route path='/dashboard' element={<DashboardPage/>}/>
+            <Route path='/employees' element={<EmployeePage/>}/>
+            <Route path='/plan' element={<WeeklyPlanPage/>}/>
+            <Route path='/stations' element={<StationPage />}/>
+            <Route path='/timeslots' element={<TimeslotPage />}/>
+            <Route path='/assignments' element={<AssignmentPage />}/>
+          </Route>
+        </Routes>
+      </AppShell>
+    </AuthProvider>
   );
 }
 

@@ -14,10 +14,13 @@ import { useSearchParams } from "react-router-dom";
 import { buildEmployeeGridModel } from "@/features/weekly-plan/buildEmployeeGrid/buildEmployeeGridModel";
 import { ViewTabs } from "@/features/weekly-plan/ViewTabs";
 import { EmployeeGrid } from "@/features/weekly-plan/buildEmployeeGrid/EmployeeGrid";
+import { useAuth } from "@/features/auth/AuthContext";
 
 const JOB_ID_STORAGE_KEY = "dienstplanung.activeJobId";
 
 export default function WeeklyPlanPage() {
+    const {role} = useAuth();
+    const canSolve = role === "ADMIN" || role === "PLANNER";
 
     const [params, setParams] = useSearchParams();
     const view = params.get("view") === "employee" ? "employee" : "station";
@@ -79,11 +82,11 @@ export default function WeeklyPlanPage() {
             <div className="flex items-center gap-3">
                 {isSolving && <SolveProgress />}
                 <ScoreSummary score={score}/>
-                <SolveButton 
+                {canSolve && (<SolveButton 
                     isSolving ={isSolving}
                     onStart={handleStart}
                     onStop={handleStop}
-                />
+                />)}
             </div>
         </div>
     );

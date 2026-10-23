@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/features/auth/AuthContext";
 import { DeleteEmployeeDialog } from "@/features/employees/DeleteEmployeeDialog";
 import { EmployeeFormDialog } from "@/features/employees/EmployeeFormDialog";
 import { EmployeeTable } from "@/features/employees/EmployeeTable";
@@ -7,7 +8,8 @@ import type { Employee } from "@/types/employee";
 import { Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
-
+const {role} = useAuth();
+const isAdmin = role === "ADMIN";
 
 export default function EmployeePage(){
     const {data, isLoading, error} = useEmployees();
@@ -94,7 +96,7 @@ export default function EmployeePage(){
                             ? "Versuche es mit einem anderen Suchbegriff."
                             : "Füge deinen ersten Mitarbeiter hinzu, um mit der Planung zu beginnen."}
                     </p>
-                    {!search && (
+                    {!search && isAdmin && (
                         <button onClick={handleCreate} className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                             + Neu
                         </button>
@@ -103,7 +105,7 @@ export default function EmployeePage(){
             ) : (
                 <EmployeeTable employees={filtered} onEdit={handleEdit} onDelete={handleDelete}/>
             )}
-            <EmployeeFormDialog key={editingEmployee?.id ?? "new"} open={formOpen} employee={editingEmployee} onClose={handleCloseForm} onSaved={handleCloseForm} />
+            <EmployeeFormDialog key={`${editingEmployee?.id ?? "new"}-${formOpen}`} open={formOpen} employee={editingEmployee} onClose={handleCloseForm} onSaved={handleCloseForm} />
             <DeleteEmployeeDialog employee={deletingEmployee} onClose={() => setDeletingEmployee(null)}/>
 
         </>
@@ -118,14 +120,14 @@ function PageHeader({onCreate}: {onCreate: () => void}) {
                 <h1 className="text-2xl font-bold">Mitarbeiter</h1>
                 <p className="text-sm text-slate-500">Verwalte die Mitarbeiter deines Dienstplans.</p>
             </div>
-            <button
+            {isAdmin && (<button
                 type="button"
                 onClick={onCreate}
                 className="inline-flex items-center gap-2 rounded-md bg-slate-900
                 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
                 + Neu
-            </button>
+            </button>)}
         </div>
     );
 }

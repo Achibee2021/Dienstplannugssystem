@@ -1,6 +1,7 @@
 import type { Timeslot } from "@/types/timeslots";
 import { DAY_LABEL, SHIFT_LABEL } from "../weekly-plan/labels";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
 
 type Props = {
     timeslot: Timeslot;
@@ -10,7 +11,8 @@ type Props = {
 
 
 export function TimeslotRow ({timeslot, onEdit, onDelete}: Props) {
-    //const freeDays = employee.wunschFreiTage ?? [];
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
 
     return (
         <tr className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
@@ -27,7 +29,7 @@ export function TimeslotRow ({timeslot, onEdit, onDelete}: Props) {
                 {DAY_LABEL[timeslot.dayOfWeek] ?? timeslot.dayOfWeek}
             </td>
             <td className="px-4 py-3 text-right">
-                <div className="inline-flex gap-1">
+                {isAdmin ? (<div className="inline-flex gap-1">
                     <button
                         type="button"
                         onClick={() => onEdit(timeslot)}
@@ -46,7 +48,7 @@ export function TimeslotRow ({timeslot, onEdit, onDelete}: Props) {
                     >
                     <Trash2  className="h-4 w-4"/>
                     </button>
-                </div>
+                </div>): <div className="text-slate-400">-</div>}
             </td>
         </tr>
     );

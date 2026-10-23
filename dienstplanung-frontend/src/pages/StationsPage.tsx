@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/features/auth/AuthContext";
 import { DeleteStationDialog } from "@/features/stations/DeleteStationDialog";
 import { StationFormDialog } from "@/features/stations/StationFormDialog";
 import { StationTable } from "@/features/stations/StationTable";
@@ -6,6 +7,9 @@ import { useStations } from "@/hooks/stations/useStations";
 import type { Station } from "@/types/station";
 import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
+
+const {role} = useAuth();
+const isAdmin = role === "ADMIN";
 
 export default function StationPage(){
     const {data, isLoading, error} = useStations();
@@ -92,7 +96,7 @@ export default function StationPage(){
                             ? "Versuche es mit einem anderen Suchbegriff."
                             : "Füge deinen ersten Station hinzu, um mit der Planung zu beginnen."}
                     </p>
-                    {!search && (
+                    {!search && isAdmin && (
                         <button onClick={handleCreate} className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                             + Neu
                         </button>
@@ -101,7 +105,7 @@ export default function StationPage(){
             ) : (
                 <StationTable stations={filtered} onEdit={handleEdit} onDelete={handleDelete}/>
             )}
-            <StationFormDialog key={editingStation?.id ?? "new"} open={formOpen} station={editingStation} onClose={handleCloseForm} onSaved={handleCloseForm} />
+            <StationFormDialog key={`${editingStation?.id ?? "new"}-${formOpen}`} open={formOpen} station={editingStation} onClose={handleCloseForm} onSaved={handleCloseForm} />
             <DeleteStationDialog station={deletingStation} onClose={() => setDeletingStation(null)}/>
 
         </>
@@ -116,14 +120,14 @@ function PageHeader({onCreate}: {onCreate: () => void}) {
                 <h1 className="text-2xl font-bold">Station</h1>
                 <p className="text-sm text-slate-500">Verwalte die Station deines Dienstplans.</p>
             </div>
-            <button
+            {isAdmin && (<button
                 type="button"
                 onClick={onCreate}
                 className="inline-flex items-center gap-2 rounded-md bg-slate-900
                 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
                 + Neu
-            </button>
+            </button>)}
         </div>
     );
 }
