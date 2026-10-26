@@ -22,5 +22,13 @@ export const assignmentApi = {
         },
         delete: async (id: string): Promise<void> => {
             await apiClient.delete(`/assignment/${id}`);
-        } 
+        },
+        updateAssignmentEmployee: async (id: string, employeeId: string | null): Promise<Assignment> => {
+            const res = await apiClient.patch<Assignment>(`/assignment/${id}/employee`, {employeeId: employeeId});
+            return res.data;
+        },
+        duplicateAssignment: async (id: string, employeeId: string ): Promise<Assignment> => {
+            const res = await apiClient.post<Assignment>(`/assignment/${id}/duplicate`, {employeeId: employeeId});
+            return res.data;
+        }
 }

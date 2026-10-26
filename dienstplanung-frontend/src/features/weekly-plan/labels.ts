@@ -25,14 +25,14 @@ export const SHIFT_LABEL: Record<ShiftType, string> = {
     FRUESCHICHT: "Früschicht",
     SPAETSCHICHT: "Spätschicht",
     NACHTSCHICHT: "Nachtschicht",
-    TAGESSCHICHT: "Tageschicht",
+    
 };
 
 export const SHIFT_EMOJI: Record<ShiftType, string> = {
     FRUESCHICHT: "🌅",
     SPAETSCHICHT: "☀️",
     NACHTSCHICHT: "🌙",
-    TAGESSCHICHT: "🌤️",
+   
 };
 
 

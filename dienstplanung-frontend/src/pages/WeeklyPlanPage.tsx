@@ -3,7 +3,7 @@ import { PlanLegend } from "@/features/weekly-plan/PlanLegend";
 import { useAssignments } from "@/hooks/assignments/useAssignments";
 import { useTimeslots } from "@/hooks/timslots/useTimeslots";
 import { WeeklyGrid } from "@/features/weekly-plan/WeeklyGrid";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSolveJob } from "@/hooks/useSolveJob";
 import { solveApi } from "@/api/solveApi";
@@ -35,13 +35,23 @@ export default function WeeklyPlanPage() {
     const timeslots = useTimeslots();
     const assignments = useAssignments();
     const solveJob = useSolveJob(jobId);
+    const invalidateRef = useRef(false);
 
     const isSolving = solveJob.data?.isSolving ?? false;
     const score = solveJob.data?.score ?? null;
 
     useEffect(() => {
+        
+        if(solveJob.data?.isSolving) {
+                invalidateRef.current = false;
+            }
+
         if (jobId && solveJob.data && !solveJob.data.isSolving) {
-            queryClient.invalidateQueries({queryKey: ["assignments"]});
+
+            if (!invalidateRef.current) {
+                queryClient.invalidateQueries({queryKey: ["assignments"]});
+                invalidateRef.current = true
+            }
         }
     }, [jobId, solveJob.data?.isSolving, queryClient]);
 

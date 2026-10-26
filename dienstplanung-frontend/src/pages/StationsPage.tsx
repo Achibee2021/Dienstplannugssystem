@@ -8,10 +8,10 @@ import type { Station } from "@/types/station";
 import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 
-const {role} = useAuth();
-const isAdmin = role === "ADMIN";
 
 export default function StationPage(){
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
     const {data, isLoading, error} = useStations();
     const [search, setSearch] = useState("");
     const [formOpen, setFormOpen] = useState(false);
@@ -113,6 +113,8 @@ export default function StationPage(){
 }
 
 function PageHeader({onCreate}: {onCreate: () => void}) {
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
    
     return (
         <div className="flex items-center justify-between mb-4 gap-3">

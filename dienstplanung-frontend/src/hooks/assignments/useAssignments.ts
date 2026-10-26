@@ -3,7 +3,7 @@ import { assignmentApi } from "@/api/assignmentApi";
 
 export function useAssignments(){
     return useQuery({
-        queryKey: ["assignment"],
+        queryKey: ["assignments"],
         queryFn: assignmentApi.getAll,
     });
 }

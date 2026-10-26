@@ -9,10 +9,10 @@ import { LinkIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 
-const {role} = useAuth();
-const isAdmin = role === "ADMIN";
 
 export default function AssignmentPage(){
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
     const {data, isLoading, error} = useAssignments();
     const [search, setSearch] = useState("");
     const [formOpen, setFormOpen] = useState(false);
@@ -115,6 +115,8 @@ export default function AssignmentPage(){
 }
 
 function PageHeader({onCreate}: {onCreate: () => void}) {
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
    
     return (
         <div className="flex items-center justify-between mb-4 gap-3">

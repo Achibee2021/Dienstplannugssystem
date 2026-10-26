@@ -141,8 +141,9 @@ public class Constraints implements ConstraintProvider {
     }
     public Constraint checkPreferredShift(ConstraintFactory constraintFactory){
         return constraintFactory.forEach(AssignmentDto.class)
-                .filter(A->A.getEmployee() != null && A.getTimeslot() != null)
-                .filter(A-> !A.getEmployee().getWunschSchicht().equals(A.getTimeslot().getType()))
+                .filter(A->A.getEmployee() != null && A.getTimeslot() != null
+                && !A.getEmployee().getWunschSchicht().isEmpty())
+                .filter(A-> !A.getEmployee().getWunschSchicht().contains(A.getTimeslot().getType()))
                 .penalize(HardSoftScore.ONE_SOFT)
                 .asConstraint("Schicht preference");
     }

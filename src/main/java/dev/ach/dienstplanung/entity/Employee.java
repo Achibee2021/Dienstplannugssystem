@@ -28,9 +28,10 @@ public class Employee {
     @Column(name = "qualification")
     private String qualification;
 
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Enumerated(EnumType.STRING)
-    @Column(name = "wunsch_schicht")
-    private Type wunschSchicht;
+    @Column(name = "wunsch_schicht", columnDefinition = "varchar[]")
+    private List<Type> wunschSchicht;
 
     @Column(name = "wochen_stunden")
     private Long wochenStunden;

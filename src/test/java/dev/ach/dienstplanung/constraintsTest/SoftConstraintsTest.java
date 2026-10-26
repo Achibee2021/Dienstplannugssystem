@@ -127,12 +127,14 @@ public class SoftConstraintsTest {
 
     @Test
     void shiftPreference_noEquals(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -157,12 +159,14 @@ public class SoftConstraintsTest {
     }
     @Test
     void shiftPreference_equals(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -188,12 +192,14 @@ public class SoftConstraintsTest {
 
     @Test
     void NightShift3Sequence_noPenalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -245,12 +251,14 @@ public class SoftConstraintsTest {
 
     @Test
     void NightShift3Sequence_penalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -340,12 +348,14 @@ public class SoftConstraintsTest {
 
     @Test
     void NightShift3Sequence_notExceed(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -387,13 +397,15 @@ public class SoftConstraintsTest {
         wunschTage.add(DayOfWeek.TUESDAY);
         wunschTage.add(DayOfWeek.WEDNESDAY);
         wunschTage.add(DayOfWeek.FRIDAY);
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
 
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 wunschTage
         );
@@ -423,13 +435,15 @@ public class SoftConstraintsTest {
         wunschTage.add(DayOfWeek.TUESDAY);
         wunschTage.add(DayOfWeek.WEDNESDAY);
         wunschTage.add(DayOfWeek.FRIDAY);
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
 
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 wunschTage
         );
@@ -457,13 +471,15 @@ public class SoftConstraintsTest {
     void togetherPreference_penalize(){
         List<String> bevorzugteMitarbeiter1 = new ArrayList<>();
         List<String> bevorzugteMitarbeiter2 = new ArrayList<>();
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
 
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 bevorzugteMitarbeiter1,
                 new ArrayList<>()
         );
@@ -472,7 +488,7 @@ public class SoftConstraintsTest {
                 "Tom",
                 "Arzt",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 bevorzugteMitarbeiter2,
                 new ArrayList<>()
         );
@@ -516,13 +532,15 @@ public class SoftConstraintsTest {
     void togetherPreference_noPenalize(){
         List<String> bevorzugteMitarbeiter1 = new ArrayList<>();
         List<String> bevorzugteMitarbeiter2 = new ArrayList<>();
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
 
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 bevorzugteMitarbeiter1,
                 new ArrayList<>()
         );
@@ -531,7 +549,7 @@ public class SoftConstraintsTest {
                 "Tom",
                 "Arzt",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 bevorzugteMitarbeiter2,
                 new ArrayList<>()
         );
@@ -566,14 +584,15 @@ public class SoftConstraintsTest {
     @Test
     void together1Preference_noPenalize(){
         List<String> bevorzugteMitarbeiter1 = new ArrayList<>();
-        //List<Employee> bevorzugteMitarbeiter2 = new ArrayList<>();
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
 
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 bevorzugteMitarbeiter1,
                 new ArrayList<>()
         );
@@ -582,12 +601,11 @@ public class SoftConstraintsTest {
                 "Tom",
                 "Arzt",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
         bevorzugteMitarbeiter1.add(employee2.getName());
-        //bevorzugteMitarbeiter2.add(employee1);
 
         TimeslotDto timeslot1 = new TimeslotDto(
                 "ts-1",
@@ -624,12 +642,14 @@ public class SoftConstraintsTest {
 
     @Test
     void fairnessWeekend_noPenalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -638,7 +658,7 @@ public class SoftConstraintsTest {
                 "Tom",
                 "Arzt",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -678,12 +698,14 @@ public class SoftConstraintsTest {
 
     @Test
     void noFairnessWeekend_penalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.NACHTSCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -692,7 +714,7 @@ public class SoftConstraintsTest {
                 "Tom",
                 "Arzt",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );

@@ -24,7 +24,7 @@ public class EmployeeDto {
    private String name;
    private String qualification;
    private Long wochenStunden;
-   private Type wunschSchicht;
+   private List<Type> wunschSchicht;
    private List<String> bevorzugtMitarbeiter;
    private List<DayOfWeek> wunschFreiTage;
 }

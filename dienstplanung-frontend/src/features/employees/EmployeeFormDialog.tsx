@@ -1,7 +1,6 @@
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateEmployee } from "@/hooks/employees/useCreateEmployee";
 import { useUpdateEmployee } from "@/hooks/employees/useUpdateEmployee";
 import type { DayOfWeek, Employee, ShiftType } from "@/types/employee";
@@ -22,7 +21,6 @@ const SHIFT_OPTIONS: {value: ShiftType, label: string}[] = [
     {value: "FRUESCHICHT", label: "Früschicht"},
     {value: "SPAETSCHICHT", label: "Spätschicht"},
     {value: "NACHTSCHICHT", label: "Nachtschicht"},
-    {value: "TAGESSCHICHT", label: "Tagesschicht"},
 ]
 
 type Props = {
@@ -39,7 +37,7 @@ export function EmployeeFormDialog({open, employee, onClose, onSaved}: Props){
     const [name, setName] = useState(() => employee?.name ?? "");
     const [qualification, setQualification] = useState(() => employee?.qualification ?? "");
     const [wochenStunden, setWochenStunden] = useState(() => employee?.wochenStunden ?? 40);
-    const [wunschSchicht, setWunschSchicht] = useState<ShiftType>(() => employee?.wunschSchicht ?? "FRUESCHICHT");
+    const [wunschSchicht, setWunschSchicht] = useState<ShiftType[]>(() => employee?.wunschSchicht ?? []);
     const [bevorzugtInput, setBevorzugtInput] = useState(() => (employee?.bevorzugtMitarbeiter ?? []).join(", "));
     const [wunschFreiTage, setWunschFreitage] = useState<DayOfWeek[]>(() => employee?.wunschFreiTage ?? []);
 
@@ -133,18 +131,21 @@ export function EmployeeFormDialog({open, employee, onClose, onSaved}: Props){
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Wunschschit</label>
-                            <Select value={wunschSchicht} onValueChange={(v) => setWunschSchicht(v as ShiftType)}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {SHIFT_OPTIONS.map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value}>
-                                            {opt.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                {SHIFT_OPTIONS.map((opt) => (
+                                    <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input type="checkbox"
+                                            checked={wunschSchicht.includes(opt.value)}
+                                            onChange={(e) => {
+                                                setWunschSchicht((prev) =>
+                                                    e.target.checked
+                                                        ? [...prev, opt.value]
+                                                        : prev.filter((v) => v != opt.value)
+                                                );
+                                            }}
+                                        />
+                                        {opt.label}
+                                    </label>
+                                ))}
                         </div>
                     </div>
                     <div>

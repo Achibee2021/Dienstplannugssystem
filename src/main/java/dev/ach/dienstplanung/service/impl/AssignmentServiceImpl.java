@@ -10,6 +10,9 @@ import dev.ach.dienstplanung.entity.Station;
 import dev.ach.dienstplanung.entity.Timeslot;
 import dev.ach.dienstplanung.exception.ElementNotFoundException;
 import dev.ach.dienstplanung.mapper.AssignmentMapper;
+import dev.ach.dienstplanung.mapper.EmployeeMapper;
+import dev.ach.dienstplanung.mapper.StationMapper;
+import dev.ach.dienstplanung.mapper.TimeslotMapper;
 import dev.ach.dienstplanung.repository.AssignmentRepository;
 import dev.ach.dienstplanung.repository.EmployeeRepository;
 import dev.ach.dienstplanung.repository.StationRepository;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -172,5 +176,52 @@ public class AssignmentServiceImpl implements AssignmentService {
 
         assignmentRepository.deleteById(assignId);
 
+    }
+
+    @Override
+    @Transactional
+    public AssignmentDto updateEmployee(String id, String employeeId) {
+        Assignment assignment = assignmentRepository.findById(id)
+                .orElseThrow(()-> new ElementNotFoundException("Assignment not found: " + id));
+
+        if (employeeId == null || employeeId.isEmpty()) {
+            assignment.setEmployee(null);
+        } else {
+
+            Employee updatedEmployee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new ElementNotFoundException("Employee not found: " + employeeId));
+            assignment.setEmployee(updatedEmployee);
+        }
+
+        Assignment savedNewAssignment = assignmentRepository.save(assignment);
+
+
+
+        return AssignmentMapper.mapToAssignmentDto(savedNewAssignment, StationMapper.mapToStationDto(savedNewAssignment.getStation()),
+                TimeslotMapper.matToTimeslotDto(savedNewAssignment.getTimeslot()),
+                savedNewAssignment.getEmployee() != null ? EmployeeMapper.mapToEmployeeDto(savedNewAssignment.getEmployee()) : null);
+    }
+
+    @Override
+    @Transactional
+    public AssignmentDto duplicateAssignment(String assignmentId, String newEmployeeId) {
+        Assignment originalAssignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new ElementNotFoundException("Assignment not found"));
+        if (newEmployeeId == null || newEmployeeId.isEmpty() || newEmployeeId.equals("none")){
+            throw  new IllegalArgumentException("Cannot duplicate without an employee");
+        }
+        Employee employee = employeeRepository.findById(newEmployeeId)
+                .orElseThrow(() -> new ElementNotFoundException("Employee not found: " + newEmployeeId));
+
+        Assignment copyAssignment = new Assignment();
+        copyAssignment.setId("assign-" + UUID.randomUUID());
+        copyAssignment.setStation(originalAssignment.getStation());
+        copyAssignment.setTimeslot(originalAssignment.getTimeslot());
+        copyAssignment.setEmployee(employee);
+
+        Assignment savedDuplicated = assignmentRepository.save(copyAssignment);
+        return AssignmentMapper.mapToAssignmentDto(savedDuplicated, StationMapper.mapToStationDto(savedDuplicated.getStation()),
+                TimeslotMapper.matToTimeslotDto(savedDuplicated.getTimeslot()),
+                EmployeeMapper.mapToEmployeeDto(savedDuplicated.getEmployee()));
     }
 }

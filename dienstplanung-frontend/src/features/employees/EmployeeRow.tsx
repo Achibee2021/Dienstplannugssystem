@@ -12,6 +12,7 @@ type Props = {
 
 export function EmployeeRow ({employee, onEdit, onDelete}: Props) {
     const freeDays = employee.wunschFreiTage ?? [];
+    const whishDays = employee.wunschSchicht ?? [];
     const {role} = useAuth();
     const isAdmin = role === "ADMIN";
 
@@ -27,7 +28,9 @@ export function EmployeeRow ({employee, onEdit, onDelete}: Props) {
                 {employee.wochenStunden}
             </td>
             <td className="px-4 py-3 text-slate-600">
-                {SHIFT_LABEL[employee.wunschSchicht] ?? employee.wunschSchicht}
+                {whishDays.length === 0 
+                    ? <span>-</span>
+                    : whishDays.map((w) => SHIFT_LABEL[w]).join(", ")}
             </td>
             <td className="px-4 py-3 text-slate-600">
                 {freeDays.length === 0

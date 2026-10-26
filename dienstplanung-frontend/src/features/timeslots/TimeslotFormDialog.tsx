@@ -21,8 +21,7 @@ const ALL_DAYS: DayOfWeek[] = [
 const SHIFT_OPTIONS: {value: ShiftType, label: string}[] = [
     {value: "FRUESCHICHT", label: "Früschicht"},
     {value: "SPAETSCHICHT", label: "Spätschicht"},
-    {value: "NACHTSCHICHT", label: "Nachtschicht"},
-    {value: "TAGESSCHICHT", label: "Tagesschicht"},
+    {value: "NACHTSCHICHT", label: "Nachtschicht"}
 ]
 
 type Props = {

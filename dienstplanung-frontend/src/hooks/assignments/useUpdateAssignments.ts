@@ -8,7 +8,7 @@ export function useUpdateAssignment() {
     return useMutation({
         mutationFn: ({id, assignment}: {id: string, assignment: Assignment}) => assignmentApi.update(id, assignment),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ["assignment"]});
+            queryClient.invalidateQueries({queryKey: ["assignments"]});
         },
     });
 }

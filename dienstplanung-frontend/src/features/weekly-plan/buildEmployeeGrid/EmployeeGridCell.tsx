@@ -1,3 +1,4 @@
+import { useDroppable } from "@dnd-kit/core";
 import type { EmployeeGridCell as EmployeeGridCellModel} from "../types"
 import { EmployeeAssignmentChip } from "./EmployeeAssignmentChip";
 
@@ -9,26 +10,36 @@ type Props = {
 export function EmployeeGridCell({cell, onSelect}: Props) {
     const isEmpty = cell.assignments.length === 0;
 
+    const {isOver, setNodeRef} = useDroppable({
+            id: `emp-cell-${cell.day}-${cell.employee.id}`,
+            data: {cell},
+        });
+
     if (isEmpty) {
         return (
-            <div className="border-b border-l border-slate-200
-            p-2 min-h-[72px] bg-white flex items-center
-            justify-center text-slate-300 text-lg select-none">-</div>
+            <div 
+                ref={setNodeRef}
+                className={`border-b border-l border-slate-200 p-2 min-h-18 flex items-center
+                justify-center text-slate-300 text-lg select-none transition-colors ${
+                    isOver ? "bg-blue-50 ring-2 ring-inset ring-blue-400" : "bg-white"
+                }`}>{isOver ? "Hier ablegen" : "-"}</div>
         );
     }
 
     return (
-        <button 
-            onClick={() => onSelect?.(cell)}
-            className="border-b border-l border-slate-200 p-2 min-h-[72px]
-                bg-white flex flex-col gap-1 text-left w-full hover:bg-slate-50
-                focus:outline-none focus:ring-2 focus:ring-blue-400
-                focus:ring-inset transition-colors"
+        <div
+            ref={setNodeRef}
+            className={`border-b border-l border-slate-200 min-h-18 bg-white transition-colors
+                ${isOver ? "bg-blue-50 ring-2 ring-inset ring-blue-400": ""}`}
         >
-            {cell.assignments.map((a)  => (
-                <EmployeeAssignmentChip key={a.id} assignment={a}/>
-            ))}
-        </button>
+            <div 
+                onClick={() => onSelect?.(cell)}
+                className=" p-2 flex flex-col gap-1 w-full cursor-pointer hover:bg-slate-50 transition-colors">
+                {cell.assignments.map((a)  => (
+                    <EmployeeAssignmentChip key={a.id} assignment={a}/>
+                ))}
+            </div>
+        </div>
     )
 
 }

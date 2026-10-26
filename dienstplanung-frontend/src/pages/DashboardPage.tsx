@@ -6,8 +6,9 @@ import { useEmployees } from "@/hooks/employees/useEmployees";
 import { useStations } from "@/hooks/stations/useStations";
 import { useTimeslots } from "@/hooks/timslots/useTimeslots";
 import { useSolveJob } from "@/hooks/useSolveJob";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Play } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function DashboardPage() {
     const JOB_ID_STORAGE_KEY = "dienstplanung.activeJobId";
@@ -17,6 +18,9 @@ export default function DashboardPage() {
     const {role} = useAuth();
     const canSolve = role === "ADMIN" || role === "PLANNER";
 
+    const queryClient = useQueryClient();
+    const invalidateRef = useRef(false);
+
     const employees = useEmployees();
     const stations = useStations();
     const timeslots = useTimeslots();
@@ -25,6 +29,19 @@ export default function DashboardPage() {
 
     const isSolving = solveJob.data?.isSolving ?? false;
     const score = solveJob.data?.score ?? null;
+
+    useEffect(() => {
+        if(solveJob.data?.isSolving) {
+                invalidateRef.current = false;
+            }
+
+        if (jobId && solveJob.data && !solveJob.data.isSolving) {
+            if (!invalidateRef.current) {
+                queryClient.invalidateQueries({queryKey: ["assignments"]});
+                invalidateRef.current = true;
+            } 
+        }
+    }, [jobId, solveJob.data?.isSolving, queryClient])
 
     const handleStartSolve = async () => {
         setIsLocalSolving(true);
@@ -56,8 +73,8 @@ export default function DashboardPage() {
                             className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2
                             text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
                         >
-                            {(isSolving || isLocalSolving) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4"/>}
-                            {(isSolving || isLocalSolving) ? "Solver läuft..." : "Optimierung starten"}
+                            {(isSolving ) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4"/>}
+                            {(isSolving ) ? "Solver läuft..." : "Optimierung starten"}
                         </button>): (<div />)}
 
                         <div className="flex items-center gap-3">

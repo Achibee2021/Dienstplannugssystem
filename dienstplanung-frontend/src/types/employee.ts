@@ -1,4 +1,4 @@
-export type ShiftType = "FRUESCHICHT" | "SPAETSCHICHT" | "NACHTSCHICHT" | "TAGESSCHICHT";
+export type ShiftType = "FRUESCHICHT" | "SPAETSCHICHT" | "NACHTSCHICHT";
 export type DayOfWeek = "MONDAY"|"TUESDAY"|"WEDNESDAY"|"THURSDAY"|"FRIDAY"|"SATURDAY"|"SUNDAY";
 
 export interface Employee{
@@ -6,7 +6,7 @@ export interface Employee{
     name: string;
     qualification: string;
     wochenStunden: number;
-    wunschSchicht: ShiftType;
+    wunschSchicht: ShiftType[];
     bevorzugtMitarbeiter: string[];
     wunschFreiTage: DayOfWeek[];
 }

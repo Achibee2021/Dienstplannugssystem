@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/dienstplan/assignment")
@@ -45,5 +46,19 @@ public class AssigmentController {
     public ResponseEntity<Void> deleteAssignment(@PathVariable String id){
         assignmentService.deleteAssignment(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/employee")
+    public ResponseEntity<AssignmentDto> updateEmployee(
+            @PathVariable String id, @RequestBody Map<String, String> body
+            ) {
+        return ResponseEntity.ok(assignmentService.updateEmployee(id, body.get("employeeId")));
+    }
+
+    @PostMapping("/{id}/duplicate")
+    public  ResponseEntity<AssignmentDto> duplicateAssignment(
+            @PathVariable String id, @RequestBody Map<String, String> body
+    ) {
+        return ResponseEntity.ok(assignmentService.duplicateAssignment(id, body.get("employeeId")));
     }
 }

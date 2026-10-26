@@ -7,7 +7,7 @@ export function useCreateAssignment() {
     return useMutation({
         mutationFn: (assignment: Assignment) => assignmentApi.create(assignment),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ["assignment"]});
+            queryClient.invalidateQueries({queryKey: ["assignments"]});
         },
     });
 }

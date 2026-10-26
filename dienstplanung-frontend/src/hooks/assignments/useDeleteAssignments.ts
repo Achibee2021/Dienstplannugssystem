@@ -7,7 +7,7 @@ export function useDeleteAssignment() {
     return useMutation({
         mutationFn: (id: string) => assignmentApi.delete(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ["assignment"]});
+            queryClient.invalidateQueries({queryKey: ["assignments"]});
         },
     });
 }

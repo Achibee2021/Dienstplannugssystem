@@ -26,12 +26,16 @@ public class SolverIntegrationTest {
     private ScheduleService scheduleService;
 
     private Schedule createTestSchedule(){
+        List<Type> typeList1 = new ArrayList<>();
+        List<Type> typeList2 = new ArrayList<>();
+        typeList1.add(Type.NACHTSCHICHT);
+        typeList1.add(Type.SPAETSCHICHT);
         EmployeeDto employee1 = new EmployeeDto(
                 "em-1",
                 "Max",
                 "Pflege",
                 40L,
-                Type.NACHTSCHICHT,
+                typeList1,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -40,7 +44,7 @@ public class SolverIntegrationTest {
                 "Anna",
                 "Pflege",
                 40L,
-                Type.SPAETSCHICHT,
+                typeList2,
                 new ArrayList<>(),
                 new ArrayList<>()
         );

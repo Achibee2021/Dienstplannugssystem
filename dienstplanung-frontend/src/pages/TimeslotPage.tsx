@@ -9,10 +9,10 @@ import { Clock } from "lucide-react";
 import { useMemo, useState } from "react";
 
 
-const {role} = useAuth();
-const isAdmin = role === "ADMIN";
 
 export default function TimeslotPage(){
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
     const {data, isLoading, error} = useTimeslots();
     const [search, setSearch] = useState("");
     const [formOpen, setFormOpen] = useState(false);
@@ -114,6 +114,8 @@ export default function TimeslotPage(){
 }
 
 function PageHeader({onCreate}: {onCreate: () => void}) {
+    const {role} = useAuth();
+    const isAdmin = role === "ADMIN";
    
     return (
         <div className="flex items-center justify-between mb-4 gap-3">
