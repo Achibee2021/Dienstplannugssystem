@@ -224,4 +224,84 @@ public class AssignmentServiceImpl implements AssignmentService {
                 TimeslotMapper.matToTimeslotDto(savedDuplicated.getTimeslot()),
                 EmployeeMapper.mapToEmployeeDto(savedDuplicated.getEmployee()));
     }
+
+    @Override
+    @Transactional
+    public AssignmentDto transferAssignment(String id, String employeeId) {
+        Assignment target = assignmentRepository.findById(id)
+                .orElseThrow(()-> new ElementNotFoundException("assignment not found: " + id));
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(()-> new ElementNotFoundException("employee not found: " + employeeId));
+
+        assignmentRepository.findAll().stream()
+                .filter(a-> a.getTimeslot().getId().equals(target.getTimeslot().getId()))
+                .filter(a->a.getEmployee() != null && a.getEmployee().getId().equals(employeeId))
+                .forEach(a-> {
+                    a.setEmployee(null);
+                    assignmentRepository.save(a);
+                });
+        target.setEmployee(employee);
+        Assignment saved = assignmentRepository.save(target);
+
+        return AssignmentMapper.mapToAssignmentDto(saved, StationMapper.mapToStationDto(saved.getStation()),
+                TimeslotMapper.matToTimeslotDto(saved.getTimeslot()),
+                EmployeeMapper.mapToEmployeeDto(saved.getEmployee()));
+    }
+
+    @Override
+    @Transactional
+    public AssignmentDto moveToDay(String assignId, String targetDay, String employeeId) {
+        Assignment assignment = assignmentRepository.findById(assignId)
+                .orElseThrow(()-> new ElementNotFoundException("assignment not found"));
+        Timeslot newTimeslot = timeslotRepository.findAll().stream()
+                .filter(t-> t.getDayOfWeek().name().equals(targetDay) && t.getType() ==
+                        assignment.getTimeslot().getType())
+                .findFirst()
+                .orElseThrow(()-> new ElementNotFoundException("timeslot not found"));
+
+        assignment.setTimeslot(newTimeslot);
+
+        if (employeeId != null && !employeeId.isEmpty()){
+            Employee employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(()-> new ElementNotFoundException("Employee not found"));
+            assignment.setEmployee(employee);
+        }
+
+        Assignment saved = assignmentRepository.save(assignment);
+        return AssignmentMapper.mapToAssignmentDto(saved, StationMapper.mapToStationDto(saved.getStation()),
+                TimeslotMapper.matToTimeslotDto(saved.getTimeslot()),
+                saved.getEmployee() != null ? EmployeeMapper.mapToEmployeeDto(saved.getEmployee()) : null);
+    }
+
+    @Override
+    @Transactional
+    public AssignmentDto duplicateToDay(String assignId, String targetDay, String employeeId) {
+        Assignment original = assignmentRepository.findById(assignId)
+                .orElseThrow(()-> new ElementNotFoundException("assignment not found"));
+
+        Timeslot newTimeslot = timeslotRepository.findAll().stream()
+                .filter(t-> t.getDayOfWeek().name().equals(targetDay) &&
+                        t.getType() == original.getTimeslot().getType())
+                .findFirst()
+                .orElseThrow(()-> new ElementNotFoundException("timeslot not found"));
+
+        Assignment copy = new Assignment();
+        copy.setId("assign-" + UUID.randomUUID());
+        copy.setStation(original.getStation());
+        copy.setTimeslot(newTimeslot);
+        copy.setEmployee(original.getEmployee());
+
+        if (employeeId != null && !employeeId.isEmpty()){
+            Employee employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(()-> new ElementNotFoundException("Employee not found"));
+            copy.setEmployee(employee);
+        } else {
+            copy.setEmployee(original.getEmployee());
+        }
+
+        Assignment saved = assignmentRepository.save(copy);
+        return AssignmentMapper.mapToAssignmentDto(saved, StationMapper.mapToStationDto(saved.getStation()),
+                TimeslotMapper.matToTimeslotDto(saved.getTimeslot()),
+                saved.getEmployee() != null ? EmployeeMapper.mapToEmployeeDto(saved.getEmployee()) : null);
+    }
 }

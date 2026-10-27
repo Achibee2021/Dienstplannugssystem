@@ -11,11 +11,14 @@ import { AppShell } from './components/layout/AppShell';
 import { AuthProvider } from './features/auth/AuthContext';
 import LoginPage from './pages/LoginPage';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import {Toaster} from "react-hot-toast"
+import MonthPlanPage from './pages/MonthPlanPage';
 
 function App() {
   return (
     <AuthProvider>
       <AppShell>
+        <Toaster position='top-right' toastOptions={{duration: 6000}}/>
         <Routes>
           <Route path='/login' element={<LoginPage />}/>
           <Route element={<ProtectedRoute />}>
@@ -26,6 +29,7 @@ function App() {
             <Route path='/stations' element={<StationPage />}/>
             <Route path='/timeslots' element={<TimeslotPage />}/>
             <Route path='/assignments' element={<AssignmentPage />}/>
+            <Route path='plan/month' element={<MonthPlanPage />}/>
           </Route>
         </Routes>
       </AppShell>

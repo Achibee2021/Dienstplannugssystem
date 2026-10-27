@@ -9,19 +9,23 @@ import { useQueryClient } from "@tanstack/react-query";
 import { assignmentApi } from "@/api/assignmentApi";
 import type { Assignment } from "@/types/assignment";
 import { DragConfirmModal } from "./DragConfirmModal";
+import toast from "react-hot-toast";
 
 type Props = {
     model: StationGridModel;
 };
+type pendingDrop = {
+    sourceAssignment: Assignment;
+    targetAssignment: Assignment;
+    targetDay?: string;
+    isMoveToDay: boolean;
+}
 
 export function WeeklyGrid ({model}: Props) {
     const [selectedCell, setSelectedCell] = useState<GridCell | null>(null);
     const queryClient = useQueryClient();
 
-    const [pendingDrop, setPendingDrop] = useState<{
-        sourceAssignment: Assignment,
-        targetAssignment: Assignment,
-    } | null>(null);
+    const [pendingDrop, setPendingDrop] = useState<pendingDrop | null>(null);
 
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -42,20 +46,38 @@ export function WeeklyGrid ({model}: Props) {
 
         const targetAssignment = targetCell.assignments[0];
         if (sourceAssignment.id !== targetAssignment.id) {
-            setPendingDrop({sourceAssignment, targetAssignment});
+            setPendingDrop({sourceAssignment, targetAssignment, isMoveToDay: false});
         }
     };
 
     const executeMove = async () => {
         if (!pendingDrop) return;
 
+        const targetEmployeeId = pendingDrop.targetAssignment.employee?.id;
+
+        if (targetEmployeeId) {
+         const validation = await assignmentApi.validateMove(
+            pendingDrop.sourceAssignment.id,
+            pendingDrop.sourceAssignment.employee!.id
+        );
+
+        if (!validation.isValid) {
+            toast.error(validation.errorMessage || "Aktion nicht erlaubt.");
+            setPendingDrop(null);
+            return;
+        }   
+        }
+
         try {
             await assignmentApi.updateAssignmentEmployee(pendingDrop.sourceAssignment.id, null);
 
             await assignmentApi.updateAssignmentEmployee(pendingDrop.targetAssignment.id, pendingDrop.sourceAssignment.employee!.id);
+            await assignmentApi.transfer(pendingDrop.targetAssignment.id, pendingDrop.sourceAssignment.employee!.id);
 
+            toast.success("Zuweisung erfolgreich verschoben.");
             await queryClient.invalidateQueries({queryKey: ["assignments"]});
         } catch (err) {
+            toast.error("Fehler beim Speichern in der Datenbank");
             console.error(err);
         } finally {
             setPendingDrop(null);

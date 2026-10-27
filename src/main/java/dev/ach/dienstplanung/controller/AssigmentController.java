@@ -1,7 +1,10 @@
 package dev.ach.dienstplanung.controller;
 
 import dev.ach.dienstplanung.dto.AssignmentDto;
+import dev.ach.dienstplanung.dto.ValidateMoveRequest;
+import dev.ach.dienstplanung.dto.ValidationResult;
 import dev.ach.dienstplanung.service.AssignmentService;
+import dev.ach.dienstplanung.service.AssignmentValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import java.util.Map;
 public class AssigmentController {
 
     private final AssignmentService assignmentService;
+    private final AssignmentValidatorService assignmentValidator;
 
     @GetMapping
     public ResponseEntity<List<AssignmentDto>> getAllEmployee(){
@@ -60,5 +64,31 @@ public class AssigmentController {
             @PathVariable String id, @RequestBody Map<String, String> body
     ) {
         return ResponseEntity.ok(assignmentService.duplicateAssignment(id, body.get("employeeId")));
+    }
+    @PostMapping("/validate-move")
+    public ResponseEntity<ValidationResult> validateMove(@RequestBody ValidateMoveRequest request) {
+        return ResponseEntity.ok(assignmentValidator.validate(request.assignmentId(), request.targetEmployeeId()));
+    }
+    @PostMapping("/{id}/transfer")
+    public ResponseEntity<AssignmentDto> transferAssignment(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body
+    ) {
+        return ResponseEntity.ok(assignmentService.transferAssignment(id, body.get("newEmployeeId")));
+    }
+    @PostMapping("/{id}/move-to-day")
+    public ResponseEntity<AssignmentDto> moveToTimeslot(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body
+    ) {
+        return ResponseEntity.ok(assignmentService.moveToDay(id, body.get("day"), body.get("employeeId")));
+    }
+
+    @PostMapping("/{id}/duplicate-to-day")
+    public ResponseEntity<AssignmentDto> duplicateToTimeslot(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body
+    ) {
+        return ResponseEntity.ok(assignmentService.duplicateToDay(id, body.get("day"), body.get("employeeId")));
     }
 }

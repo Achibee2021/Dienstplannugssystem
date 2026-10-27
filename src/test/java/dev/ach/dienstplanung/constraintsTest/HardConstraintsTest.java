@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 
 public class HardConstraintsTest {
 
@@ -18,13 +19,38 @@ public class HardConstraintsTest {
             Schedule.class, AssignmentDto.class);
 
     @Test
+    void noShiftTestPenalizes(){
+        AssignmentDto assignment1 = new AssignmentDto();
+        assignment1.setId("as-1");
+        assignment1.setEmployee(null);
+        constraintVerifier.verifyThat(Constraints::assignEveryShift)
+                .given(assignment1)
+                .penalizesBy(1L);
+    }
+
+    @Test
+    void noShiftTestNotPenalizes(){
+        EmployeeDto employeeDto = new EmployeeDto();
+        employeeDto.setId("emp-1");
+
+        AssignmentDto assignment1 = new AssignmentDto();
+        assignment1.setId("as-1");
+        assignment1.setEmployee(employeeDto);
+        constraintVerifier.verifyThat(Constraints::assignEveryShift)
+                .given(assignment1)
+                .penalizesBy(0);
+    }
+
+    @Test
     void employeeConflictTestPenalizes(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -73,12 +99,14 @@ public class HardConstraintsTest {
 
     @Test
     void employeeConflictTest_noOverlap(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -127,12 +155,14 @@ public class HardConstraintsTest {
 
     @Test
     void employeeConflictTest_differentEmployee(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -141,7 +171,7 @@ public class HardConstraintsTest {
                 "Anna",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -192,12 +222,14 @@ public class HardConstraintsTest {
 
     @Test
     void employeeConflictTest_sameStation(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -242,12 +274,14 @@ public class HardConstraintsTest {
 
     @Test
     void qualifikationMismatch_penalizes(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -273,12 +307,14 @@ public class HardConstraintsTest {
 
     @Test
     void qualifikationMatches_NoPenalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -328,12 +364,14 @@ public class HardConstraintsTest {
     }
     @Test
     void minimumStaffingMatches_noPenalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -342,7 +380,7 @@ public class HardConstraintsTest {
                 "Jena",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -379,12 +417,14 @@ public class HardConstraintsTest {
 
     @Test
     void minimumStaffing_MoreEmployees_noPenalize(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -393,7 +433,7 @@ public class HardConstraintsTest {
                 "Jena",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -402,7 +442,7 @@ public class HardConstraintsTest {
                 "Nolan",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -444,12 +484,14 @@ public class HardConstraintsTest {
     }
     @Test
     void maximumWorkingTime_exceed(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -473,12 +515,14 @@ public class HardConstraintsTest {
 
     @Test
     void maximumWorkingTime_multipleAssignmentsExceed(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -515,12 +559,14 @@ public class HardConstraintsTest {
 
     @Test
     void maximumWorkingTime_equal(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -543,12 +589,14 @@ public class HardConstraintsTest {
     }
     @Test
     void maximumWorkingTime_notExceed(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -572,12 +620,14 @@ public class HardConstraintsTest {
 
     @Test
     void restTime_exceed(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -614,12 +664,14 @@ public class HardConstraintsTest {
 
     @Test
     void restTime_equals(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
@@ -656,12 +708,14 @@ public class HardConstraintsTest {
 
     @Test
     void restTime_notExceed(){
+        List<Type> typeList = new ArrayList<>();
+        typeList.add(Type.FRUESCHICHT);
         EmployeeDto employee1 =new EmployeeDto(
                 "em-1",
                 "Max",
                 "PFLEGE",
                 40L,
-                Type.FRUESCHICHT,
+                typeList,
                 new ArrayList<>(),
                 new ArrayList<>()
         );

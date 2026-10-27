@@ -3,6 +3,7 @@ package dev.ach.dienstplanung.constraint;
 import ai.timefold.solver.core.api.score.HardSoftScore;
 import ai.timefold.solver.core.api.score.stream.*;
 import dev.ach.dienstplanung.dto.AssignmentDto;
+import dev.ach.dienstplanung.dto.EmployeeDto;
 import dev.ach.dienstplanung.dto.Type;
 import org.jspecify.annotations.NonNull;
 
@@ -10,10 +11,12 @@ import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+
 public class Constraints implements ConstraintProvider {
     @Override
     public Constraint @NonNull [] defineConstraints(@NonNull ConstraintFactory constraintFactory) {
         return new Constraint[]{
+                assignEveryShift(constraintFactory),
                 employeeConflict(constraintFactory),
                 chekQualification(constraintFactory),
                 minimumStaffing(constraintFactory),
@@ -25,7 +28,8 @@ public class Constraints implements ConstraintProvider {
                 checkWeekendFairness(constraintFactory),
                 checkDaysOff(constraintFactory),
                 checkPreferredShift(constraintFactory),
-                checkTogetherPreference(constraintFactory)
+                checkTogetherPreference(constraintFactory),
+                ensureEveryEmployeeGetsShift(constraintFactory)
         };
     }
 
@@ -44,6 +48,12 @@ public class Constraints implements ConstraintProvider {
     //                              HARD CONSTRAINTS
     //---------------------------------------------------------------------------------------------------------------------------------
 
+    public  Constraint assignEveryShift(ConstraintFactory constraintFactory){
+        return constraintFactory.forEachIncludingUnassigned(AssignmentDto.class)
+                .filter(a-> a.getEmployee() == null)
+                .penalize(HardSoftScore.ONE_HARD)
+                .asConstraint("Unassigned Shift penality");
+    }
     // Ein Mitarbeiter darf nicht auf zwei stationen während gleichen Arbeitszeiten eingesetzt werden.
     public Constraint employeeConflict(ConstraintFactory constraintFactory){
         return constraintFactory.forEachUniquePair(AssignmentDto.class,
@@ -123,6 +133,13 @@ public class Constraints implements ConstraintProvider {
 //                                             SOFT CONSTRAINTS
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 
+    public Constraint ensureEveryEmployeeGetsShift(ConstraintFactory constraintFactory){
+         return constraintFactory.forEach(EmployeeDto.class)
+                 .ifNotExists(AssignmentDto.class,
+                         Joiners.equal(EmployeeDto::getId, assignmentDto -> assignmentDto.getEmployee().getId()))
+                 .penalize(HardSoftScore.ONE_SOFT)
+                 .asConstraint("Every employee should have at least one shift");
+    }
     public Constraint checkNightShiftPreference(ConstraintFactory constraintFactory){
 
         return constraintFactory.forEach(AssignmentDto.class)

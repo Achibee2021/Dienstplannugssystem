@@ -23,4 +23,10 @@ public interface AssignmentService {
     AssignmentDto updateEmployee(String id, String employeeId);
 
     AssignmentDto duplicateAssignment(String assignmentId, String newEmployeeId);
+
+    AssignmentDto transferAssignment(String id, String employeeId);
+
+    AssignmentDto moveToDay(String assignId, String targetDay, String employeeId);
+
+    AssignmentDto duplicateToDay(String assignId, String targetDay, String employeeId);
 }

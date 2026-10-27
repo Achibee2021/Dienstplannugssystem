@@ -9,18 +9,22 @@ import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { assignmentApi } from "@/api/assignmentApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { DragConfirmModal } from "../DragConfirmModal";
+import toast from "react-hot-toast";
 
 type Props = {
     model: EmployeeGridModel;
 };
+type pendingDrop = {
+    sourceAssignment: Assignment;
+    targetAssignment: Assignment;
+    targetDay?: string;
+    isMoveToDay: boolean;
+}
 
 export function EmployeeGrid ({model}: Props) {
     const queryClient = useQueryClient();
 
-    const [pendingDrop, setPendingDrop] = useState<{
-            sourceAssignment: Assignment,
-            targetAssignment: Assignment,
-        } | null>(null)
+    const [pendingDrop, setPendingDrop] = useState<pendingDrop | null>(null)
 
         const handleDragEnd = (event: DragEndEvent) => {
                 const {active, over} = event;
@@ -28,13 +32,14 @@ export function EmployeeGrid ({model}: Props) {
                 if (!over) return;
         
                 const sourceAssignment = active.data.current?.assignment as Assignment;
-                const targetCell = over.data.current?.cell as any;
+                const targetCell = over.data.current?.cell as EmployeeGridCell;
         
                 if (!sourceAssignment || !targetCell) return;
 
-                if(sourceAssignment.employee?.id === targetCell.employee.id){return;}
+                //if(sourceAssignment.employee?.id === targetCell.employee.id){return;}
         
-                if (targetCell.assignments.length === 0 || !targetCell.assignments) {
+                if (targetCell.assignments.length === 0 ) {
+                    //const targetTimeslotId = targetCell.assignments.timeslot
         
                     setPendingDrop({
                         sourceAssignment,
@@ -43,37 +48,54 @@ export function EmployeeGrid ({model}: Props) {
                             employee: targetCell.employee,
                             station: sourceAssignment.station,
                             timeslot: sourceAssignment.timeslot
-                        } as Assignment
+                        } as Assignment,
+                        targetDay: targetCell.day,
+                        isMoveToDay: true
                     });
                     return;
                 }
         
                 const targetAssignment = targetCell.assignments[0];
                 if (sourceAssignment.id !== targetAssignment.id) {
-                    setPendingDrop({sourceAssignment, targetAssignment});
+                    setPendingDrop({sourceAssignment, targetAssignment, isMoveToDay: false});
                     
                 }
             };
         
             const executeMove = async () => {
                 if (!pendingDrop) return;
+
+                const targetEmployeeId = pendingDrop.targetAssignment.employee?.id;
+
+                if (targetEmployeeId) {
+                 const validation = await assignmentApi.validateMove(
+                    pendingDrop.sourceAssignment.id,
+                    targetEmployeeId
+                );
+                
+                if (!validation.isValid) {
+                    toast.error(validation.errorMessage || "Aktion nicht erlaubt.");
+                    setPendingDrop(null);
+                    return;
+                }
+                }
         
                 try {
 
-                    if (pendingDrop.sourceAssignment.id === pendingDrop.targetAssignment.id) {
-                        await assignmentApi.updateAssignmentEmployee(
-                            pendingDrop.sourceAssignment.id,
-                            pendingDrop.targetAssignment.employee!.id
-                        );
+                    if (pendingDrop.isMoveToDay) {
+                        await assignmentApi.moveToDay(pendingDrop.sourceAssignment.id, pendingDrop.targetDay!, pendingDrop.targetAssignment.employee!.id);
+                        
                     } else {
                         await assignmentApi.updateAssignmentEmployee(pendingDrop.sourceAssignment.id, null);
         
                         await assignmentApi.updateAssignmentEmployee(pendingDrop.targetAssignment.id, pendingDrop.sourceAssignment.employee!.id);
                     }
-                    
+
+                    toast.success("Zuweisung erfolgreich verschoben.");
                     await queryClient.invalidateQueries({queryKey: ["assignments"]});
                     
                 } catch (err) {
+                    toast.error("Fehler beim Speichern in der Datenbank");
                     console.error(err);
                 } finally {
                     setPendingDrop(null);
@@ -84,11 +106,17 @@ export function EmployeeGrid ({model}: Props) {
         if (!pendingDrop) return;
 
         try {
-            await assignmentApi.updateAssignmentEmployee(pendingDrop.sourceAssignment.id, null);
-
-            await assignmentApi.duplicateAssignment(pendingDrop.targetAssignment.id, pendingDrop.sourceAssignment.employee!.id);
+            if (pendingDrop.isMoveToDay) {
+                await assignmentApi.duplicateToDay(pendingDrop.sourceAssignment.id, pendingDrop.targetDay!, pendingDrop.targetAssignment.employee!.id);
+            }
+            else{
+                await assignmentApi.duplicateAssignment(pendingDrop.targetAssignment.id, pendingDrop.sourceAssignment.employee!.id);
+            }
+            
+            toast.success("Erfolgreich dupliziert.");
             await queryClient.invalidateQueries({queryKey: ["assignments"]});
         } catch (err) {
+            toast.error("Fehler beim Duplizieren.")
             console.error(err)
         }finally {setPendingDrop(null);}
     }

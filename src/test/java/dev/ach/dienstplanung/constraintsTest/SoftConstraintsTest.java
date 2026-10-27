@@ -3,6 +3,7 @@ package dev.ach.dienstplanung.constraintsTest;
 import ai.timefold.solver.core.api.score.stream.test.ConstraintVerifier;
 import dev.ach.dienstplanung.constraint.Constraints;
 import dev.ach.dienstplanung.dto.*;
+import dev.ach.dienstplanung.entity.Employee;
 import dev.ach.dienstplanung.planning.Schedule;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,32 @@ public class SoftConstraintsTest {
     ConstraintVerifier<Constraints, Schedule> constraintVerifier
             = ConstraintVerifier.build(new Constraints(),
             Schedule.class, AssignmentDto.class);
+
+    @Test
+    void employeeWithoutShiftPenalizes(){
+        EmployeeDto employee1 = new EmployeeDto();
+        employee1.setId("emp-1");
+        employee1.setName("Alice");
+
+        constraintVerifier.verifyThat(Constraints::ensureEveryEmployeeGetsShift)
+                .given(employee1)
+                .penalizesBy(1);
+    }
+
+    @Test
+    void employeeWithoutShiftNotPenalizes(){
+        EmployeeDto employee1 = new EmployeeDto();
+        employee1.setId("emp-1");
+        employee1.setName("Alice");
+
+        AssignmentDto assignmentDto = new AssignmentDto();
+        assignmentDto.setId("as-1");
+        assignmentDto.setEmployee(employee1);
+
+        constraintVerifier.verifyThat(Constraints::ensureEveryEmployeeGetsShift)
+                .given(employee1, assignmentDto)
+                .penalizesBy(0);
+    }
 
     @Test
     void NightShift_penalize(){

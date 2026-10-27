@@ -41,6 +41,7 @@ Das System versucht zunächst, alle **Hard Constraints** einzuhalten und anschli
 |-----------------|---------------------------------|
 | Java            | Programmiersprache              |
 | Spring Boot     | Backend / REST API              |
+| Spring Security | Authentifizierung & Rollen      |
 | Timefold Solver | Optimierung der Dienstplanung   |
 | PostgreSQL      | Persistenz                      |
 | Flyway          | Datenbankmigrationen            |
@@ -49,6 +50,8 @@ Das System versucht zunächst, alle **Hard Constraints** einzuhalten und anschli
 | TypeScript      | Programmiersprache (Frontend)   |
 | Tailwind CSS    | Styling                         |
 | TanStack Query  | Data Fetching & State           |
+| Dnd-kit         | Drag & Drop Library             |
+| jsPDF           | PDF Export                      |
 | JUnit           | Backend Tests                   |
 | Vitest          | Frontend Tests                  |
 
@@ -90,10 +93,10 @@ src/main/java/dev/ach/dienstplanung
     └── Constraints
     
  └── frontend/ (React App)
-    ├── src/api/         # Axios Clients
+    ├── src/api/         # Axios Clients (mit JWT Interceptor)
     ├── src/hooks/       # TanStack Query Hooks
-    ├── src/pages/       # Seiten (Dashboard, Plan, CRUD)
-    └── src/features/    # Feature-Komponenten (Grid, Forms)
+    ├── src/pages/       # Seiten (Dashboard, Plan, Monat, CRUD, Login)
+    └── src/features/    # Feature-Komponenten (Grid, DnD, Forms)
 ```
 **Wichtig**: ``Entity`` und ``DTO`` sind bewusst getrennte Klassen.
 * **Entities** (``entity``) sind JPA-Klassen mit ``@Entity``, ``@Id`` und Beziehungen.
@@ -211,62 +214,21 @@ Eine vollständige Beschreibung befindet sich in [`constraints.md`](docs).
 können theoretisch ``null`` zurückgeben. Constraints müssen daher
 **null-sicher** formuliert sein, z.B.:
 
-```text
-List<DayOfWeek> freitage = employee.getWunschFreitag();
-if(freitage == null || !freitage.contains(day)) return;
-```
-Zusätzlich sorgt der Mapper dafür, dass ``null``-Werte aus der 
-Datenbank als leere Listen (``List.of()``) im DTO landen.
-
-Eine vollständige Beschreibung befindet sich in [``constraints.md``](docs)
-
-----
-
 ## 6. REST API
 Das Backend stellt eine REST API zur Verfügung. Die Datenbank ist die
 einzige Quelle der Wahrheit; der Client sendet **keine** Planungsdaten
 mehr im Request-Body.
 
-### Dienstplan starten
-```http request
-POST http://localhost:8080/dienstplan/solve
-```
-Kein Request-Body. Der Server lädt alle Mitarbeiter, stationen,
-Timeslots und Assignments aus der Datenbank, startet den Solver
-und gibt eine ``jobId`` von type ``UUID`` zurück.
+| **Methode** | **Endpunkt**                              | **Beschreibung**                              | **Role**               |
+|-------------|-------------------------------------------|-----------------------------------------------|------------------------|
+| `POST`      | `/dientsplan/auth/login`                  | JWT Login                                     | Public                 |
+| `POST`      | `/dienstplan/solve`                       | Startet den Timefold Solver                   | ADMIN, PLANNER         |
+| `GET`       | `/dienstplan/solve{jobId}`                | Ruft den Solver-Status ab                     | ADMIN, PLANNER, VIEWER |
+| `POST`      | `/dienstplan/assignment/validate-move`    | Prüft Drag & Drop auf Constraints             | ADMIN, PLANNER         |
+| `POST`      | `/dienstplan/assignment/{id}/move-to-day` | Verschiebt eine Schicht auf einen anderen Tag | ADMIN, PLANNER         |
+| `GET`       | `/dienstplan/employees`                   | Alle Mitarbeiter abrufen                      | Alle Auht              |
+| `POST`      | `/dienstplan/solve/{jobId}/stop/`         | Beendet den Solver-Job                        | ADMIN, PLANNER         |
 
-### Planung abrufen
-```http request
-GET http://localhost:8080/dienstplan/solve/{jobId}
-```
-gekürzt Antwort
-```json
-{
-  "jobId": "3e4c1f8a-9b2d-4e7f-8a1b-2c3d4e5f6a7b",
-  "schedule": {
-    "assigmentList": [
-      {
-        "id": "assign-1",
-        "employee": { "id": "emp-1", "name": "Alice Smith", "...": "..." },
-        "station":  { "id": "st-1",  "name": "Station A" },
-        "timeslot": { "id": "ts-1",  "dayOfWeek": "MONDAY" }
-      }
-    ],
-    "employees": [ "..." ],
-    "stations":  [ "..." ],
-    "timeslots": [ "..." ],
-    "score": "0hard/-4soft"
-  },
-  "score": "0hard/-4soft",
-  "isSolving": false
-}
-
-```
-### Planung abbrechen
-```http request
-POST http://localhost:8080/dienstplan/solve/{jobId}/stop/
-```
-Beendet den Solver-job vorzeitig.
 
 ## 7. Ablauf der Planung
 ```
@@ -314,31 +276,23 @@ Datenbank und baut ein ``Schedule``-Objekt.
 * wird ``ScheduleWriterService.writeBack(...)`` aufgerufen, um die
 Mitarbeiterzuordnung in der Tabelle ``assignment`` zu speichern.
 4. Der Client pollt ``GET /dienstplan/solve/{jobId}``, bis ``isSolving == false``.
-5. Das Endergebnis ist sowohl in der Antwort als in der Datenbank verfügbar.
 
 ---
 
-## 8. Datenbank
+## 8. Datenbank & Sicherheit
 
 Das Projekt verwendet **PostgreSQL** als Datenbank.
 
 Die Datenbankstruktur wird mit **Flyway** verwaltet.
 
-Migrationen befinden sich unter:
-
-```text
-src/main/resources/db/migration/
-```
-
-Flyway führt die vorhandenen Migrationen beim Start der Anwendung aus.
-
-### 9.1 Schema (übersicht)
-| **Tabelle**    | **Spalten**                                                                                                                                        |
-|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| ``employee``   | ``id (PK, String)``,``name``,``qualification``,``wochen_stunden``,``wunsch_schicht``,``bevorzugte_mitarbeiter TEXT[]``,``wunsch_frei_tage TEXT[]`` |
-| ``station``    | ``id (PK, String)``,``name``,``anzahl_benoetigte_mitarbaiter``,``benoetigte_qualification``                                                        |
-| ``timeslot``   | ``id (PK, String)``, ``name``, ``day_of_week``, ``start_time``,``end_time``,``type``                                                               |
-| ``assignment`` | ``id (PK, String)``, ``station_id (FK)``,``timeslot_id (FK)``,``employee_id (FK, nullable)``                                                       |
+### 8.1 Schema (übersicht)
+| **Tabelle**    | **Spalten**                                                                                                                                                   |
+|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app_user`     | `id`, `username`, `password_hash`, `role`, `enabled`                                                                                                          |
+| ``employee``   | ``id (PK, String)``,``name``,``qualification``,``wochen_stunden``,``wunsch_schicht VARCHAR []``,``bevorzugte_mitarbeiter TEXT[]``,``wunsch_frei_tage TEXT[]`` |
+| ``station``    | ``id (PK, String)``,``name``,``anzahl_benoetigte_mitarbaiter``,``benoetigte_qualification``                                                                   |
+| ``timeslot``   | ``id (PK, String)``, ``name``, ``day_of_week``, ``start_time``,``end_time``,``type``                                                                          |
+| ``assignment`` | ``id (PK, String)``, ``station_id (FK)``,``timeslot_id (FK)``,``employee_id (FK, nullable)``                                                                  |
 Die konkreten Spaltentypen und Constraints sind in den Flyway-Migrationen dokumentiert.
 
 ### 8.2 Lösch-Verhalten
@@ -346,7 +300,11 @@ Die konkreten Spaltentypen und Constraints sind in den Flyway-Migrationen dokume
 * **Employee**: ``ON DELETE RESTRICT``: Ein Mitarbeiter kann nicht gelöscht werden, solange er noch Dienste hat.
 
 ---
+### 8.3 Sicherheit (JWT & RBAC)
+Die API ist stateless. Nach dem Login erhält der Client ein JWT, das im ``Authorization: Bearer`` header mitgesendet wird. Es gibt drei Rollen
+: ``ADMIN``(Vollzugriff), `PLANNER`(Planen/Solver starten, keine Stammdaten ändern) und `VIEWER`(Nur Lesen).
 
+---
 ## 9. Tests
 
 Das Projekt enthält Tests für die verschiedenen Komponenten.
@@ -423,25 +381,9 @@ Weitere technische Informationen befinden sich in den folgenden Dokumenten:
 
 [`domain-modell.md`](docs)
 
-Beschreibung der zentralen Domänenklassen:
-
-* Employee
-* Station
-* Timeslot
-* Assignment
-* Schedule
-
 ### Planning Model
 
 [`planning-modell.md`](docs)
-
-Beschreibung der Timefold-Struktur und der Rolle von:
-
-* `@PlanningSolution`
-* `@PlanningEntity`
-* `@PlanningVariable`
-* Problem Facts
-* Value Ranges
 
 ### Constraints
 
@@ -455,17 +397,19 @@ Beschreibung der Hard- und Soft-Constraints und ihrer Bedeutung für die Optimie
 
 **Aktueller Stand (V1.0)**
 
-* [x] Domain Model
-* [x] Planning Model
+* [x] Domain Model & Planning Model
 * [x] Hard & Soft Constraints
 * [x] Datenbankintegration (Lesen und Schreiben)
 * [x] REST Controller (CRUD & Solver)
-* [x] Frontend (Dashboard, Grid-Ansichten, CRUD-Formulare)
+* [x] Frontend UI (Dashboard, Grid-Ansichten, CRUD-Formulare)
 * [x] Live-Solver Polling & Echtzeit-Score
 * [x] Tests (Backend & Frontend)
-* [ ] Rollen- und Rechtesystem (Auth)
+* [x] JWT Authentication & Role-Based Access Control (RBAC)
+* [x] Drag & Drop mit Echtzeit-Validierung (Ruhezeit)
+* [x] Multi-Shift Präferenzen (Listen statt Enum)
+* [x] Monatsplaner & PDF Export (A4)
 * [ ] Deployment (Docker / Cloud)
-* [ ] Export (PDF /Excel)
+* [ ] Schichten über Mitternacht (Night Shift Logic)
 * [ ] 
 
 ---

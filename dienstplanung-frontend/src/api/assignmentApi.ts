@@ -30,5 +30,21 @@ export const assignmentApi = {
         duplicateAssignment: async (id: string, employeeId: string ): Promise<Assignment> => {
             const res = await apiClient.post<Assignment>(`/assignment/${id}/duplicate`, {employeeId: employeeId});
             return res.data;
-        }
+        },
+        validateMove: async (assignmentId: string, targetEmployeeId: string): Promise<{isValid: boolean, errorMessage?: string}> => {
+            const res = await apiClient.post(`/assignment/validate-move`, {assignmentId, targetEmployeeId});
+            return res.data;
+        },
+        transfer: async (id: string, targetEmployeeId: string): Promise<Assignment> => {
+            const res = await apiClient.post(`/assignment/${id}/transfer`, {targetEmployeeId:targetEmployeeId});
+            return res.data;
+        },
+        moveToDay: async (assignmentId: string, day: string, employeeId: string): Promise<Assignment> => {
+            const res = await apiClient.post<Assignment>(`/assignment/${assignmentId}/move-to-day`, {day, employeeId})
+            return res.data;
+        },
+        duplicateToDay: async (assignmentId: string, day: string, employeeId: string): Promise<Assignment> => {
+            const res = await apiClient.post<Assignment>(`/assignment/${assignmentId}duplicate-to-day`, {day, employeeId})
+            return res.data;
+        },
 }

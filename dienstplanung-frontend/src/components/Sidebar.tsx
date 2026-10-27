@@ -1,5 +1,5 @@
 import { useAuth } from "@/features/auth/AuthContext";
-import { Calendar, Clock, LayoutDashboard, LinkIcon, MapPin, Users } from "lucide-react";
+import { Calendar, Calendar1, Clock, LayoutDashboard, LinkIcon, MapPin, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const NAV_LINKS = [
@@ -31,7 +31,7 @@ export function Sidebar() {
                 className={({isActive}) => `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm  font-medium transition-colors
                             ${isActive} ? "bg-blue-600 text-white" : "hover:bg-slate-800 hover:text-white"`}
             >
-                <Calendar className="h-5 w-5"/>
+                <Calendar1 className="h-5 w-5"/>
                 Planung
             </NavLink>
 
@@ -50,6 +50,13 @@ export function Sidebar() {
                     ))}
                 </>
             )}
+            <NavLink to="/plan/month"
+                 className={({isActive}) => `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm  font-medium transition-colors
+                            ${isActive} ? "bg-blue-600 text-white" : "hover:bg-slate-800 hover:text-white"`}
+            >
+                <Calendar className="h-5 w-5"/>
+                Monat Calendar
+            </NavLink>
             
         </nav>
     );
