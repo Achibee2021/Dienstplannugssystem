@@ -10,6 +10,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -36,4 +38,14 @@ public class Timeslot {
     @Enumerated(EnumType.STRING)
     @Column(name = "shift_type", nullable = false, length = 20)
     private Type type;
+
+    /*@Column(name = "crosses_midnight")
+    private boolean crossesMidnight = false;
+
+    @Transient
+    @PrePersist
+    @PreUpdate
+    public void calculateCrossesMidnight() {
+        if (startTime != null && endTime != null){this.crossesMidnight = endTime.isBefore(startTime);}
+    }*/
 }

@@ -1,11 +1,10 @@
 import type { Assignment } from "@/types/assignment"
 import { stationHue } from "../StationHue";
 import { useDraggable } from "@dnd-kit/core";
-//import type { Station } from "@/types/station";
 
-type Props = {
+type Props = Readonly<{
     assignment: Assignment;
-}
+}>
 
 
 
@@ -42,11 +41,12 @@ export function AssignmentChip({assignment}: Props) {
                 "opacity-50 cursor-grabbin" : "cursor-grab hover:bg-slate-50"
             }`}
         >
-            <div className="">
+            <div>
                 <span className="inline-block w-1 self-stretch rounded-full"
                     style={{backgroundColor: `hsl(${stationHue(station.id)}, 65%, 55%)`}}
                 />
                 <span className="wrap-break-word">{employee.name}</span>
+                
             </div>
         </div>
     );

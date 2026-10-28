@@ -6,4 +6,5 @@ export interface Timeslot {
     startTime: string;
     endTime: string;
     type: ShiftType;
+    crossesMidnight?: boolean;
 }

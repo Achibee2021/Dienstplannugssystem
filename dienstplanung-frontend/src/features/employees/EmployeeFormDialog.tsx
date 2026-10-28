@@ -23,12 +23,12 @@ const SHIFT_OPTIONS: {value: ShiftType, label: string}[] = [
     {value: "NACHTSCHICHT", label: "Nachtschicht"},
 ]
 
-type Props = {
+type Props = Readonly<{
     open: boolean;
     employee: Employee | null;
     onClose: () => void;
     onSaved: () => void;
-}
+}>;
 
 export function EmployeeFormDialog({open, employee, onClose, onSaved}: Props){
     const isEdit = employee !==null;

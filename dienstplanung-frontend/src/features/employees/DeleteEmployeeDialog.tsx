@@ -3,10 +3,10 @@ import { useDeleteEmployee } from "@/hooks/employees/useDeleteEmployee";
 import type { Employee } from "@/types/employee"
 import { useState } from "react";
 
-type Props = {
+type Props = Readonly<{
     employee: Employee | null;
     onClose: () => void;
-};
+}>;
 
 export function DeleteEmployeeDialog({employee, onClose}:Props) {
     const open = employee !== null;

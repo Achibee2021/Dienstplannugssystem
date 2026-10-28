@@ -44,6 +44,19 @@ public class Constraints implements ConstraintProvider {
     private static boolean wantsFree(List<DayOfWeek> freeDays, DayOfWeek day){
         return freeDays != null && freeDays.contains(day);
     }
+
+    private final LocalDate referenceDate = LocalDate.of(2026,9,28);
+
+    LocalDateTime localDateTransformation(LocalDate referenceDate, DayOfWeek dayOfWeek, LocalTime localTime){
+        LocalDate day = referenceDate.with(TemporalAdjusters.nextOrSame(dayOfWeek));
+        return LocalDateTime.of(day, localTime);
+    }
+
+    private LocalDateTime getShiftEnd(LocalDate baseDate, DayOfWeek day, LocalTime start, LocalTime end){
+        LocalDateTime endDt = localDateTransformation(baseDate, day, end);
+        if (end.isBefore(start)){endDt = endDt.plusDays(1);}
+        return endDt;
+    }
     //----------------------------------------------------------------------------------------------------------------------------------
     //                              HARD CONSTRAINTS
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -85,9 +98,14 @@ public class Constraints implements ConstraintProvider {
         return constraintFactory.forEach(AssignmentDto.class)
                 .filter(A->A.getEmployee() != null && A.getTimeslot() != null)
                 .groupBy(AssignmentDto::getEmployee, A -> A.getTimeslot().getDayOfWeek(),
-                        ConstraintCollectors.sumDuration(A->
-                                (Duration.between(A.getTimeslot().getStartTime(),
-                                        A.getTimeslot().getEndTime()))))
+                        ConstraintCollectors.sumDuration(A-> {
+                            LocalTime start = A.getTimeslot().getStartTime();
+                            LocalTime end = A.getTimeslot().getEndTime();
+                            Duration duration = Duration.between(start, end);
+
+                            if (end.isBefore(start)){duration = duration.plusDays(1);}
+                            return duration;
+                                }))
                 .filter((E, DoW, D)->
                         D.compareTo(E.getMaximumWorkingTime()) > 0)
                 .penalize(HardSoftScore.ONE_HARD,
@@ -96,12 +114,7 @@ public class Constraints implements ConstraintProvider {
                 .asConstraint("Arbeitszeit ueberschritten conflict");
 
     }
-    private final LocalDate referenceDate = LocalDate.of(2026,9,28);
 
-     LocalDateTime localDateTransformation(LocalDate referenceDate, DayOfWeek dayOfWeek, LocalTime localTime){
-        LocalDate day = referenceDate.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-        return LocalDateTime.of(day, localTime);
-    }
     public Constraint restTime(ConstraintFactory constraintFactory){
 
         return constraintFactory.forEachUniquePair(AssignmentDto.class,
@@ -114,16 +127,16 @@ public class Constraints implements ConstraintProvider {
                 .filter((A1,A2)->{
                     Duration ruhezeit;
                     LocalDateTime start1 = localDateTransformation(referenceDate, A1.getTimeslot().getDayOfWeek(),A1.getTimeslot().getStartTime());
-                    LocalDateTime end1 = localDateTransformation(referenceDate, A1.getTimeslot().getDayOfWeek(),A1.getTimeslot().getEndTime());
+                    LocalDateTime end1 = getShiftEnd(referenceDate, A1.getTimeslot().getDayOfWeek(),A1.getTimeslot().getStartTime(),A1.getTimeslot().getEndTime());
 
                     LocalDateTime start2 = localDateTransformation(referenceDate, A2.getTimeslot().getDayOfWeek(),A2.getTimeslot().getStartTime());
-                    LocalDateTime end2 = localDateTransformation(referenceDate, A2.getTimeslot().getDayOfWeek(),A2.getTimeslot().getEndTime());
+                    LocalDateTime end2 = getShiftEnd(referenceDate, A2.getTimeslot().getDayOfWeek(),A2.getTimeslot().getStartTime(),A2.getTimeslot().getEndTime());
 
-                    LocalDateTime earlierEnd = end1.isBefore(start2) ? end1 : end2;
-                    LocalDateTime laterStart = end1.isBefore(start2) ? start2 : start1;
-                    ruhezeit = Duration.between(earlierEnd, laterStart);
+                    if (end1.isBefore(start2)){ruhezeit = Duration.between(end1, start2);}
+                    else if (end2.isBefore(start1)) {ruhezeit = Duration.between(end2, start1);}
+                    else {return false;}
 
-                    return !ruhezeit.isNegative() &&ruhezeit.compareTo(A1.getEmployee().getRuheTime()) < 0;
+                    return ruhezeit.compareTo(A1.getEmployee().getRuheTime()) < 0;
                 })
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("ruhezeit conflict");

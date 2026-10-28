@@ -5,14 +5,14 @@ import type { EmployeeGridModel, EmployeeGridCell } from "../types";
 import { EmployeeGridRow } from "./EmployeeGridRow";
 import { DAY_LABEL} from "../labels";
 import type { Assignment } from "@/types/assignment";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { assignmentApi } from "@/api/assignmentApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { DragConfirmModal } from "../DragConfirmModal";
 import toast from "react-hot-toast";
 
 type Props = {
-    model: EmployeeGridModel;
+    readonly model: EmployeeGridModel;
 };
 type pendingDrop = {
     sourceAssignment: Assignment;
@@ -22,6 +22,14 @@ type pendingDrop = {
 }
 
 export function EmployeeGrid ({model}: Props) {
+
+    const sensors = useSensors(
+            useSensor(PointerSensor, {
+                activationConstraint: {
+                    distance: 5,
+                }
+            })
+        )
     const queryClient = useQueryClient();
 
     const [pendingDrop, setPendingDrop] = useState<pendingDrop | null>(null)
@@ -132,7 +140,7 @@ export function EmployeeGrid ({model}: Props) {
 
     return (
         <>
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                 <div className="rounded-lg border border-slate-200 shadow-sm overflow-x-auto bg-white">
                     <div
                         className="min-w-max grid"

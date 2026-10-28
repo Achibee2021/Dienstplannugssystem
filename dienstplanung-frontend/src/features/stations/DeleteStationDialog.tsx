@@ -3,10 +3,10 @@ import { useDeleteStation } from "@/hooks/stations/useDeleteStation";
 import type { Station } from "@/types/station";
 import { useState } from "react";
 
-type Props = {
+type Props = Readonly<{
     station: Station | null;
     onClose: () => void;
-};
+}>;
 
 export function DeleteStationDialog({station, onClose}:Props) {
     const open = station !== null;

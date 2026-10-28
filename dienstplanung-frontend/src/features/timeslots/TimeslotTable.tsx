@@ -1,11 +1,11 @@
 import type { Timeslot } from "@/types/timeslots";
 import { TimeslotRow } from "./TimeslotRow";
 
-type Props = {
+type Props = Readonly<{
     timeslots: Timeslot[];
     onEdit: (timeslot: Timeslot) => void;
     onDelete: (timeslot: Timeslot) => void;
-}
+}>;
 
 export function TimeslotTable({timeslots, onEdit, onDelete}: Props) {
 

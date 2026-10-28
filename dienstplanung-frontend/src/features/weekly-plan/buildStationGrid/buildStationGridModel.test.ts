@@ -14,8 +14,8 @@ const wednesdayFrüh: Timeslot = { id: "ts-wed-frueh", dayOfWeek: "WEDNESDAY",  
 const stationA: Station = { id: "st-1", name: "Station A", benoetigteAnzahlMitarbeiter: 1, benoetigtQualification: "Pfleger" };
 const stationB: Station = { id: "st-2", name: "Station B", benoetigteAnzahlMitarbeiter: 1, benoetigtQualification:"pfleger" };
 
-const alice: Employee = { id: "emp-1", name: "Alice Smith", wochenStunden: 40, wunschFreiTage:["MONDAY"],wunschSchicht: "FRUESCHICHT", bevorzugtMitarbeiter:[], qualification:"pfleger" };
-const Tom: Employee = { id: "emp-2", name: "Tom Cruise", wochenStunden: 40, wunschFreiTage:["MONDAY"],wunschSchicht: "SPAETSCHICHT", bevorzugtMitarbeiter:[], qualification:"pfleger" };
+const alice: Employee = { id: "emp-1", name: "Alice Smith", wochenStunden: 40, wunschFreiTage:["MONDAY"],wunschSchicht: ["FRUESCHICHT"], bevorzugtMitarbeiter:[], qualification:"pfleger" };
+const Tom: Employee = { id: "emp-2", name: "Tom Cruise", wochenStunden: 40, wunschFreiTage:["MONDAY"],wunschSchicht: ["SPAETSCHICHT"], bevorzugtMitarbeiter:[], qualification:"pfleger" };
 
 
 

@@ -3,10 +3,10 @@ import { useDeleteTimeslot } from "@/hooks/timslots/useDeleteTimeslot";
 import type { Timeslot } from "@/types/timeslots";
 import { useState } from "react";
 
-type Props = {
+type Props = Readonly<{
     timeslot: Timeslot | null;
     onClose: () => void;
-};
+}>;
 
 export function DeleteTimeslotDialog({timeslot, onClose}:Props) {
     const open = timeslot !== null;

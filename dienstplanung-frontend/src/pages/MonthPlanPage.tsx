@@ -4,11 +4,10 @@ import { useAssignments } from "@/hooks/assignments/useAssignments";
 import { useTimeslots } from "@/hooks/timslots/useTimeslots";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas-pro";
-import {jsPDF} from "jspdf";
-import {format} from "date-fns";
-import {de} from "date-fns/locale";
+import { jsPDF } from "jspdf";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from "date-fns";
+import { de } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
-import { Link } from "react-router-dom";
 
 export default function MonthPlanPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -18,7 +17,7 @@ export default function MonthPlanPage() {
     const timeslots = useTimeslots();
 
     if (assignments.isLoading || timeslots.isLoading) {
-        return <div>Lade...</div>
+        return <div>Lade...</div>;
     }
 
     const stationModel = buildStationGridModel(assignments.data ?? [], timeslots.data ?? []);
@@ -31,7 +30,7 @@ export default function MonthPlanPage() {
     const exportPdf = async () => {
         if (!gridRef.current) return;
 
-        const canvas = await html2canvas(gridRef.current, {scale: 2});
+        const canvas = await html2canvas(gridRef.current, { scale: 2 });
         const imgData = canvas.toDataURL("image/png");
 
         const pdf = new jsPDF("l", "mm", "a4");
@@ -46,19 +45,32 @@ export default function MonthPlanPage() {
         const newHeight = imgHeight * ratio;
 
         pdf.addImage(imgData, "PNG", 0, 0, newWidth, newHeight);
-        pdf.save(`Dienstplan_${format(currentDate, "MMMM_yyyy", {locale: de})}.pdf`);
+        pdf.save(`Dienstplan_${format(currentDate, "MMMM_yyyy", { locale: de })}.pdf`);
     };
 
-    const weeks: Date[][] = [];
-    let currentWeek: Date[] = [];
+    // --- Robust Week Builder: Generates full Mon-Sun weeks for the month view ---
+    const firstDayOfMonth = monthModel.days[0];
+    const lastDayOfMonth = monthModel.days[monthModel.days.length - 1];
 
-    monthModel.days.forEach((day) => {
+    // Get the Monday of the week containing the first day
+    const startDate = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
+    // Get the Sunday of the week containing the last day
+    const endDate = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
 
-        if (day.getDay() === 1 && currentWeek.length > 0) {
+    const allDaysInGrid = eachDayOfInterval({ start: startDate, end: endDate });
+
+    const weeks: (Date | null)[][] = [];
+    let currentWeek: (Date | null)[] = [];
+
+    allDaysInGrid.forEach((day, index) => {
+        // If it's a Monday and the week isn't empty, push the completed week
+        if (index > 0 && index % 7 === 0) {
             weeks.push(currentWeek);
             currentWeek = [];
         }
-        currentWeek.push(day);
+        // Only include days that belong to the current month for clean rendering, 
+        // or keep them as null placeholders to preserve grid columns.
+        currentWeek.push(isSameMonth(day, currentDate) ? day : null);
     });
     if (currentWeek.length > 0) {
         weeks.push(currentWeek);
@@ -68,7 +80,6 @@ export default function MonthPlanPage() {
         <div className="p-6">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold">Monatsplan</h1>
-                
                 
                 <div className="flex items-center gap-4">
                     <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
@@ -89,46 +100,60 @@ export default function MonthPlanPage() {
 
             {/* The Grid to be Exported */}
             <div ref={gridRef} className="bg-white p-4 rounded-lg border border-slate-200 overflow-x-auto space-y-8">
-                {weeks.map((week, weekIdx) => (
-                    <div key={weekIdx} className="min-w-max grid" style={{ gridTemplateColumns: `200px repeat(7, minmax(100px, 1fr))` }}>
-                        
-                        {/* Header Row for this week */}
-                        <div className="border-b border-slate-200 bg-slate-50 p-2 font-bold text-sm">
-                            Station / Schicht (KW {format(week[0], "ww")})
-                        </div>
-                        {week.map((day, idx) => (
-                            <div key={idx} className="border-b border-l border-slate-200 bg-slate-50 p-2 text-center text-xs">
-                                <div className="font-semibold">{format(day, "dd.MM.")}</div>
-                                <div className="text-slate-500">{format(day, "eee", { locale: de })}</div>
+                {weeks.map((week, weekIdx) => {
+                    // Find a valid date in this week to format the calendar week number (KW)
+                    const validDayForKw = week.find(d => d !== null) || week[0]!;
+                    
+                    return (
+                        <div key={weekIdx} className="min-w-max grid" style={{ gridTemplateColumns: `200px repeat(7, minmax(100px, 1fr))` }}>
+                            
+                            {/* Header Row for this week */}
+                            <div className="border-b border-slate-200 bg-slate-50 p-2 font-bold text-sm">
+                                Station / Schicht (KW {format(validDayForKw, "ww", { locale: de })})
                             </div>
-                        ))}
-
-                        {/* Data Rows for this week */}
-                        {monthModel.rows.map((row, rowIdx) => (
-                            <div key={rowIdx} className="contents">
-                                <div className="border-b border-slate-200 p-2 text-sm">
-                                    <strong>{row.station.name}</strong>
-                                    <br/>
-                                    <span className="text-xs text-slate-500">{row.shiftType}</span>
+                            {week.map((day, idx) => (
+                                <div key={idx} className="border-b border-l border-slate-200 bg-slate-50 p-2 text-center text-xs">
+                                    {day ? (
+                                        <>
+                                            <div className="font-semibold">{format(day, "dd.MM.")}</div>
+                                            <div className="text-slate-500">{format(day, "eee", { locale: de })}</div>
+                                        </>
+                                    ) : (
+                                        <div className="text-slate-300">-</div>
+                                    )}
                                 </div>
-                                {week.map((day, cellIdx) => {
-                                    // Find the cell for this exact day
-                                    const cell = row.cells.find(c => c.date.toDateString() === day.toDateString());
-                                    
-                                    return (
-                                        <div key={cellIdx} className="border-b border-l border-slate-200 p-1">
-                                            {cell?.assignments.map(a => (
-                                                <div key={a.id} className="bg-slate-100 rounded px-1 text-[10px] truncate mb-1">
-                                                    {a.employee?.name || "Offen"}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </div>
-                ))}
+                            ))}
+
+                            {/* Data Rows for this week */}
+                            {monthModel.rows.map((row, rowIdx) => (
+                                <div key={rowIdx} className="contents">
+                                    <div className="border-b border-slate-200 p-2 text-sm flex flex-col justify-center">
+                                        <strong>{row.station.name}</strong>
+                                        <span className="text-xs text-slate-500">{row.shiftType}</span>
+                                    </div>
+                                    {week.map((day, cellIdx) => {
+                                        if (!day) {
+                                            return <div key={cellIdx} className="border-b border-l border-slate-200 bg-slate-50/50 p-1" />;
+                                        }
+
+                                        // Find the cell for this exact day
+                                        const cell = row.cells.find(c => c.date.toDateString() === day.toDateString());
+                                        
+                                        return (
+                                            <div key={cellIdx} className="border-b border-l border-slate-200 p-1 min-h-[50px]">
+                                                {cell?.assignments.map(a => (
+                                                    <div key={a.id} className="bg-slate-100 rounded px-1 text-[10px] truncate mb-1">
+                                                        {a.employee?.name || "Offen"}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

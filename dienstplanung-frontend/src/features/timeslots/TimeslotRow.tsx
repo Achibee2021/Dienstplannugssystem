@@ -3,11 +3,11 @@ import { DAY_LABEL, SHIFT_LABEL } from "../weekly-plan/labels";
 import { Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
-type Props = {
+type Props = Readonly<{
     timeslot: Timeslot;
     onEdit: (timeslot: Timeslot) => void;
     onDelete: (timeslot: Timeslot) => void;
-};
+}>;
 
 
 export function TimeslotRow ({timeslot, onEdit, onDelete}: Props) {
@@ -21,6 +21,9 @@ export function TimeslotRow ({timeslot, onEdit, onDelete}: Props) {
             </td>
             <td className="px-4 py-3 text-slate-600">
                 {timeslot.endTime}
+                {timeslot.crossesMidnight && (
+                    <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 px-1 rounded" title="Geht über Mitternacht">+1</span>
+                )}
             </td>
             <td className="px-4 py-3 text-slate-600">
                 {SHIFT_LABEL[timeslot.type] ?? timeslot.type}

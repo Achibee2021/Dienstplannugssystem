@@ -10,12 +10,12 @@ import {
 import { DAY_LABEL, SHIFT_EMOJI, SHIFT_LABEL } from "./labels";
 import type { Assignment } from "@/types/assignment";
 
- type Props = {
+ type Props = Readonly<{
     assignments: Assignment[] | null;
     headerTitle: string;
     headerSubtitle: string;
     onClose: () => void;
- };
+ }>;
 
  export function AssignmentDetailSheet({assignments,headerTitle,headerSubtitle, onClose}: Props) {
     const open =assignments != null && assignments.length > 0;

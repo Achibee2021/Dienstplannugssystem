@@ -4,7 +4,7 @@ import { GridRow } from "./buildStationGrid/StationGridRow";
 import type { StationGridModel, GridCell } from "./types"
 import { AssignmentDetailSheet } from "./AssignmentDetailSheet";
 import { DAY_LABEL, SHIFT_EMOJI, SHIFT_LABEL } from "./labels";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { assignmentApi } from "@/api/assignmentApi";
 import type { Assignment } from "@/types/assignment";
@@ -12,7 +12,7 @@ import { DragConfirmModal } from "./DragConfirmModal";
 import toast from "react-hot-toast";
 
 type Props = {
-    model: StationGridModel;
+    readonly model: StationGridModel;
 };
 type pendingDrop = {
     sourceAssignment: Assignment;
@@ -22,6 +22,14 @@ type pendingDrop = {
 }
 
 export function WeeklyGrid ({model}: Props) {
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            }
+        })
+    )
     const [selectedCell, setSelectedCell] = useState<GridCell | null>(null);
     const queryClient = useQueryClient();
 
@@ -94,7 +102,7 @@ export function WeeklyGrid ({model}: Props) {
 
     return (
         <>
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
                     <div className="min-w-max grid"
                         style={{gridTemplateColumns: `220px repeat(${model.days.length}, minmax(0, 1fr))`,}}

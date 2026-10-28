@@ -1,11 +1,11 @@
 import type { Employee } from "@/types/employee";
 import { EmployeeRow } from "./EmployeeRow";
 
-type Props = {
+type Props = Readonly<{
     employees: Employee[];
     onEdit: (employee: Employee) => void;
     onDelete: (employee: Employee) => void;
-}
+}>;
 
 export function EmployeeTable({employees, onEdit, onDelete}: Props) {
 

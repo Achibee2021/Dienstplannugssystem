@@ -24,12 +24,12 @@ const SHIFT_OPTIONS: {value: ShiftType, label: string}[] = [
     {value: "NACHTSCHICHT", label: "Nachtschicht"}
 ]
 
-type Props = {
+type Props = Readonly<{
     open: boolean;
     timeslot: Timeslot | null;
     onClose: () => void;
     onSaved: () => void;
-}
+}>;
 
 export function TimeslotFormDialog({open, timeslot, onClose, onSaved}: Props){
     const isEdit = timeslot !==null;

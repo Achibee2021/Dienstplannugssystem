@@ -2,11 +2,11 @@ import type { Station } from "@/types/station";
 import { Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
-type Props = {
+type Props = Readonly<{
     station: Station;
     onEdit: (station: Station) => void;
     onDelete: (station: Station) => void;
-};
+}>;
 
 
 export function StationRow ({station, onEdit, onDelete}: Props) {

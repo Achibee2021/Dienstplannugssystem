@@ -3,7 +3,7 @@ import { stationHue } from "../StationHue";
 import { useDraggable } from "@dnd-kit/core";
 
 type Props = {
-    assignment: Assignment;
+    readonly assignment: Assignment;
 }
 
 export function EmployeeAssignmentChip({assignment}: Props){
@@ -38,9 +38,12 @@ export function EmployeeAssignmentChip({assignment}: Props){
                 {station.name}
             </div>
             {timeslot && (
-                <div className="text-slate-500">
-                    {timeslot.startTime.slice(0,5)}-{timeslot.endTime.slice(0,5)}
-                </div>
+                <div className="text-slate-500 flex items-center gap-1">
+                    <span>{timeslot.startTime.slice(0,5)}-{timeslot.endTime.slice(0,5)}</span>
+                    {timeslot.crossesMidnight && (
+                    <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 px-1 rounded" title="Geht über Mitternacht">+1</span>
+                )}
+                </div>   
             )}
         </div>
     )

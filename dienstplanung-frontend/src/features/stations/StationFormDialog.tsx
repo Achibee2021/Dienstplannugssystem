@@ -6,12 +6,12 @@ import type { Station } from "@/types/station";
 import { useState } from "react";
 
 
-type Props = {
+type Props = Readonly<{
     open: boolean;
     station: Station | null;
     onClose: () => void;
     onSaved: () => void;
-}
+}>;
 
 export function StationFormDialog({open, station, onClose, onSaved}: Props){
     const isEdit = station !==null;

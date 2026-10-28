@@ -1,11 +1,11 @@
 import type { Station } from "@/types/station";
 import { StationRow } from "./StationRow";
 
-type Props = {
+type Props = Readonly<{
     stations: Station[];
     onEdit: (station: Station) => void;
     onDelete: (station: Station) => void;
-}
+}>;
 
 export function StationTable({stations, onEdit, onDelete}: Props) {
 

@@ -40,7 +40,7 @@ export default function WeeklyPlanPage() {
     const isSolving = solveJob.data?.isSolving ?? false;
     const score = solveJob.data?.score ?? null;
 
-    useEffect(() => {
+    useEffect(()  => {
         
         if(solveJob.data?.isSolving) {
                 invalidateRef.current = false;

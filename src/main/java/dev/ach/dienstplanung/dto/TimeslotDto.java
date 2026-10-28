@@ -4,6 +4,8 @@ import ai.timefold.solver.core.api.domain.common.PlanningId;
 import lombok.*;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @AllArgsConstructor
@@ -21,4 +23,8 @@ public class TimeslotDto {
    private LocalTime startTime;
    private LocalTime endTime;
    private Type type;
+
+   public boolean isCrossesMidnight () {
+      return  endTime != null && startTime != null && endTime.isBefore(startTime);
+   }
 }

@@ -16,12 +16,14 @@ public class TimeslotMapper {
     }
 
     public static Timeslot mapToTimeslot(TimeslotDto timeslotDto){
-        return new Timeslot(
-                timeslotDto.getId(),
-                timeslotDto.getDayOfWeek(),
-                timeslotDto.getStartTime(),
-                timeslotDto.getEndTime(),
-                timeslotDto.getType()
-        );
+        Timeslot timeslot = new Timeslot();
+
+        timeslot.setId(timeslotDto.getId());
+        timeslot.setDayOfWeek(timeslotDto.getDayOfWeek());
+        timeslot.setStartTime(timeslotDto.getStartTime());
+        timeslot.setEndTime(timeslotDto.getEndTime());
+        timeslot.setType(timeslotDto.getType());
+        //timeslot.setCrossesMidnight(timeslotDto.isCrossesMidnight());
+        return timeslot;
     }
 }

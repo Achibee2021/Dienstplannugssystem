@@ -3,11 +3,11 @@ import { DAY_LABEL_SHORT, SHIFT_LABEL } from "../weekly-plan/labels";
 import { Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
-type Props = {
+type Props = Readonly<{
     employee: Employee;
     onEdit: (employee: Employee) => void;
     onDelete: (employee: Employee) => void;
-};
+}>;
 
 
 export function EmployeeRow ({employee, onEdit, onDelete}: Props) {
