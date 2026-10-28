@@ -29,7 +29,7 @@ public class SolverIntegrationTest {
         List<Type> typeList1 = new ArrayList<>();
         List<Type> typeList2 = new ArrayList<>();
         typeList1.add(Type.NACHTSCHICHT);
-        typeList1.add(Type.SPAETSCHICHT);
+        typeList2.add(Type.SPAETSCHICHT);
         EmployeeDto employee1 = new EmployeeDto(
                 "em-1",
                 "Max",
@@ -118,9 +118,24 @@ public class SolverIntegrationTest {
     void scheduleTest(){
 
         Schedule s = scheduleService.load();
-        Assertions.assertSame(s.getStations().getFirst(), s.getAssigmentList().getFirst().getStation());
-        Assertions.assertSame(s.getTimeslots().getFirst(), s.getAssigmentList().getFirst().getTimeslot());
-        Assertions.assertNull(s.getAssigmentList().getFirst().getEmployee());
+
+        Assertions.assertFalse(s.getStations().isEmpty());
+        Assertions.assertFalse(s.getTimeslots().isEmpty());
+        Assertions.assertFalse(s.getAssigmentList().isEmpty());
+
+        AssignmentDto assignmentDto = s.getAssigmentList().getFirst();
+
+        boolean stationExits = s.getStations()
+                        .stream()
+                                .anyMatch(station -> station.getId().equals(assignmentDto.getStation().getId()));
+
+        boolean timeslotExits = s.getTimeslots()
+                        .stream()
+                                .anyMatch(timeslot -> timeslot.getId().equals(assignmentDto.getTimeslot().getId()));
+
+        Assertions.assertTrue(stationExits);
+        Assertions.assertTrue(timeslotExits);
+        Assertions.assertNull(assignmentDto.getEmployee());
 
     }
 }

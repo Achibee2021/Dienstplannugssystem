@@ -1,69 +1,87 @@
 package dev.ach.dienstplanung.controller;
 
-
 import dev.ach.dienstplanung.dto.ScheduleResponse;
 import dev.ach.dienstplanung.planning.Schedule;
 import dev.ach.dienstplanung.service.DienstPlanningsService;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(DienstPlanController.class)
-public class DienstPlanControllerTest {
+@ExtendWith(MockitoExtension.class)
+class DienstPlanControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @Mock
     private DienstPlanningsService dienstPlanningsService;
 
-    @Test
-    void testSolveEndpoint() throws Exception {
-        UUID jobId = UUID.randomUUID();
-        Mockito.when(dienstPlanningsService.solve())
-                .thenReturn(jobId);
+    @InjectMocks
+    private DienstPlanController dienstPlanController;
 
-        String sampleScheduleJson = """
-                {
-                    "assignmentList": [],
-                    "employeeList": [],
-                    "stationList": [],
-                    "timeslotList": [],
-                }
-                """;
-        mockMvc.perform(post("/dienstplan/solve")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(sampleScheduleJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(jobId.toString()));
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(dienstPlanController)
+                .build();
     }
 
     @Test
-    void testGetScheduleEndpoint() throws  Exception {
+    void testSolveEndpoint() throws Exception {
+
         UUID jobId = UUID.randomUUID();
-        ScheduleResponse mockResponse = new ScheduleResponse(
+
+        Mockito.when(dienstPlanningsService.solve())
+                .thenReturn(jobId);
+
+        mockMvc.perform(post("/dienstplan/solve"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(jobId.toString()));
+
+        Mockito.verify(dienstPlanningsService).solve();
+    }
+
+    @Test
+    void testGetScheduleEndpoint() throws Exception {
+
+        UUID jobId = UUID.randomUUID();
+
+        ScheduleResponse response = new ScheduleResponse(
                 jobId,
                 new Schedule(),
                 null,
                 false
         );
 
-        Mockito.when(dienstPlanningsService.getSchedule(jobId)).thenReturn(mockResponse);
+        Mockito.when(
+                dienstPlanningsService.getSchedule(jobId)
+        ).thenReturn(response);
 
-        mockMvc.perform(get("/dienstplan/solve/" + jobId))
+        mockMvc.perform(
+                        get("/dienstplan/solve/" + jobId)
+                )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobId").value(jobId.toString()))
-                .andExpect(jsonPath("$.isSolving").value(false));
+                .andExpect(jsonPath("$.jobId")
+                        .value(jobId.toString()))
+                .andExpect(jsonPath("$.isSolving")
+                        .value(false));
+
+        Mockito.verify(dienstPlanningsService)
+                .getSchedule(jobId);
     }
 }
