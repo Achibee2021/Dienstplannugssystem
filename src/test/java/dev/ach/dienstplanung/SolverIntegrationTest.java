@@ -3,9 +3,16 @@ package dev.ach.dienstplanung;
 import ai.timefold.solver.core.api.solver.SolverJob;
 import ai.timefold.solver.core.api.solver.SolverManager;
 import dev.ach.dienstplanung.dto.*;
+import dev.ach.dienstplanung.entity.Assignment;
+import dev.ach.dienstplanung.entity.Station;
+import dev.ach.dienstplanung.entity.Timeslot;
 import dev.ach.dienstplanung.planning.Schedule;
+import dev.ach.dienstplanung.repository.AssignmentRepository;
+import dev.ach.dienstplanung.repository.StationRepository;
+import dev.ach.dienstplanung.repository.TimeslotRepository;
 import dev.ach.dienstplanung.service.ScheduleService;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +33,15 @@ public class SolverIntegrationTest {
 
     @Autowired
     private ScheduleService scheduleService;
+
+    @Autowired
+    private StationRepository stationRepository;
+
+    @Autowired
+    private TimeslotRepository timeslotRepository;
+
+    @Autowired
+    private AssignmentRepository assignmentRepository;
 
     private Schedule createTestSchedule(){
         List<Type> typeList1 = new ArrayList<>();
@@ -116,28 +132,73 @@ public class SolverIntegrationTest {
         Assertions.assertNotNull(solution);
     }
 
+
+
     @Test
-    void scheduleTest(){
+    @Transactional
+    void scheduleTest() {
 
-        Schedule s = scheduleService.load();
+        String suffix = UUID.randomUUID().toString();
 
-        Assertions.assertFalse(s.getStations().isEmpty());
-        Assertions.assertFalse(s.getTimeslots().isEmpty());
-        Assertions.assertFalse(s.getAssigmentList().isEmpty());
+        Station station = new Station(
+                "st-test-" + suffix,
+                "Test Station",
+                1,
+                "Pflege"
+        );
 
-        AssignmentDto assignmentDto = s.getAssigmentList().getFirst();
+        Timeslot timeslot = new Timeslot(
+                "ts-test-" + suffix,
+                DayOfWeek.MONDAY,
+                LocalTime.of(8, 0),
+                LocalTime.of(13, 0),
+                Type.FRUESCHICHT
+        );
 
-        boolean stationExits = s.getStations()
+        stationRepository.save(station);
+        timeslotRepository.save(timeslot);
+
+        Assignment assignment = new Assignment(
+                "assignment-test-" + suffix,
+                station,
+                timeslot,
+                null
+        );
+
+        assignmentRepository.save(assignment);
+
+        Schedule schedule = scheduleService.load();
+
+        AssignmentDto loadedAssignment = schedule.getAssigmentList()
+                .stream()
+                .filter(a -> a.getId().equals(assignment.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        Assertions.assertTrue(
+                schedule.getStations()
                         .stream()
-                                .anyMatch(station -> station.getId().equals(assignmentDto.getStation().getId()));
+                        .anyMatch(s -> s.getId().equals(station.getId()))
+        );
 
-        boolean timeslotExits = s.getTimeslots()
+        Assertions.assertTrue(
+                schedule.getTimeslots()
                         .stream()
-                                .anyMatch(timeslot -> timeslot.getId().equals(assignmentDto.getTimeslot().getId()));
+                        .anyMatch(t -> t.getId().equals(timeslot.getId()))
+        );
 
-        Assertions.assertTrue(stationExits);
-        Assertions.assertTrue(timeslotExits);
-        Assertions.assertNull(assignmentDto.getEmployee());
+        Assertions.assertEquals(
+                station.getId(),
+                loadedAssignment.getStation().getId()
+        );
 
+        Assertions.assertEquals(
+                timeslot.getId(),
+                loadedAssignment.getTimeslot().getId()
+        );
+
+        Assertions.assertNull(
+                loadedAssignment.getEmployee()
+        );
     }
 }
