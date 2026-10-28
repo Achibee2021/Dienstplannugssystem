@@ -12,7 +12,6 @@ const SHIFT_LABEL: Record<ShiftType, string> = {
     FRUESCHICHT: "Früh",
     SPAETSCHICHT: "Spät",
     NACHTSCHICHT: "Nacht",
-    TAGESSCHICHT: "Tag",
 };
 
 export function GridRow({row, onCellClick}: Props) {
