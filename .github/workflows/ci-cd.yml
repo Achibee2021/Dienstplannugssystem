@@ -21,9 +21,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: dienstplanung
+          POSTGRES_USER: ach
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: dienstplan
         ports:
           - 5432:5432
         options: >-
@@ -43,19 +43,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Flyway Migrations 
-        run: mvn flyway:migrate
-        env:
-          FLYWAY_URL: jdbc:postgresql://localhost:5432/dienstplanung
-          FLYWAY_USER: postgres
-          FLYWAY_PASSWORD: postgres
-
       - name: Run Backend Tests
         run: mvn clean verify
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/dienstplanung
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/dienstplan
+          SPRING_DATASOURCE_USERNAME: ach
+          SPRING_DATASOURCE_PASSWORD: password
 
   # ---------------------------------------------------------
   # JOB 2: Frontend Tests (React + Vite)
@@ -83,7 +76,7 @@ jobs:
         run: npm run lint 
       - name: Run Frontend Tests
         working-directory: ./dienstplan-frontend
-        run: npm test -- --run 
+        run: npm run test:run 
 
   # ---------------------------------------------------------
   # JOB 3: Build and Push Docker Images
