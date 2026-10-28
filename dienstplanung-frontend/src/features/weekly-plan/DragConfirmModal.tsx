@@ -2,8 +2,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 
 type Props = Readonly<{
     open: boolean;
-    sourceName: any;
-    targetName: any;
+    sourceName: string;
+    targetName: string;
     onMove: () => void;
     onDuplicate: () => void;
     onCancel: () => void;

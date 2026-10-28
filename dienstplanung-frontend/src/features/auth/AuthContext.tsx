@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { AuthContextType } from "@/types/authContextType";
 import { createContext, useContext, useState, type ReactNode } from "react";
 

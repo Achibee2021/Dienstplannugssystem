@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildEmployeeGridModel } from "./buildEmployeeGridModel";
 import type { Assignment } from "@/types/assignment";
-import type { Employee, DayOfWeek, ShiftType } from "@/types/employee";
+import type { Employee } from "@/types/employee";
 import type { Station } from "@/types/station";
 import type { Timeslot } from "@/types/timeslots";
 

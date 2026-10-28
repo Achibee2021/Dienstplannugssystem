@@ -23,8 +23,8 @@ export default function LoginPage() {
         try {
             const data = await authApi.login(username, password);
             login(data.accessToken, data.role, data.username);
-            navigate("/dashboard");
-        } catch (err) {
+            await navigate("/dashboard");
+        } catch {
             setError("Üngultiger Benutzername oder Password.");
         } finally {
             setLoading(false);

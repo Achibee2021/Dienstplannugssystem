@@ -1,15 +1,17 @@
 import type { DayOfWeek } from "@/types/employee";
 import type { StationGridModel } from "../types";
+import type { Assignment } from "@/types/assignment";
+import type { Station } from "@/types/station";
 
 export type MonthCell = {
     date: Date;
     dayOfWeek: DayOfWeek;
-    assignments: any[];
+    assignments: Assignment[];
 };
 
 export type MonthRow = {
     shiftType: string;
-    station: any;
+    station: Station;
     cells: MonthCell[];
 };
 
