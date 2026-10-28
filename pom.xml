@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>26</java.version>
+		<java.version>21</java.version>
 		<timefold-solver.version>2.7.0</timefold-solver.version>
 	</properties>
 	<dependencies>
