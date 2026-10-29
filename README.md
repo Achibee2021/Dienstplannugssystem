@@ -9,10 +9,25 @@ zuzuordnen. Dabei werden sowohl zwingende Anforderungen (**Hard Constraints**) a
 Die Datenbank (**PostgreSQL**) ist die einzige Quelle der Wahrheit: Mitarbeiter, Stationen, Timeslots und Assignments werden dort 
 gespeichert, der Solver liest sie von dort und schreibt das Ergebnis wieder zurück.
 
-Das System verfügt über ein **React (TypeScript) Frontend**, das eine interaktive Planung, Live-Solver_Updates und vollständiges CRUD ermöglicht.
+Das System verfügt über ein **React (TypeScript) Frontend**, das eine interaktive Planung, Live-Solver-Updates, Drag & Drop mit
+Echtzeit-Validierung und vollständiges CRUD ermöglicht.
 
 ---
+## Screenshots
+|            Login            | Dashboard (Admin-Planner)-View  |
+|:---------------------------:|:-------------------------------:|
+| [Login](docs/LoginPage.png) | [Dashboard](docs/dashboard.png) |
 
+|              Planungsansicht (Employee)               |             Planungsansicht (Stationen)             |
+|:-----------------------------------------------------:|:---------------------------------------------------:|
+| [Planung Employee View](docs/planungEmployeeView.png) | [Planung Station View](docs/planungStationView.png) |
+
+|    Monatsplaner & PDF Export    |             Dashboard (Viewer)-View              |
+|:-------------------------------:|:------------------------------------------------:|
+| [Monatplan](docs/monatplan.pdf) | [Dashboard Viewer](docs/dashboardViewerView.png) |
+
+
+---
 ## 1. Ziel des Projekts
 
 Ziel des Projekts ist es, einen Dienstplan für einen definierten Planungszeitraum automatisch zu erstellen.
@@ -37,23 +52,14 @@ Das System versucht zunächst, alle **Hard Constraints** einzuhalten und anschli
 
 ## 2. Technologien
 
-| Technologie     | Verwendung                      |
-|-----------------|---------------------------------|
-| Java            | Programmiersprache              |
-| Spring Boot     | Backend / REST API              |
-| Spring Security | Authentifizierung & Rollen      |
-| Timefold Solver | Optimierung der Dienstplanung   |
-| PostgreSQL      | Persistenz                      |
-| Flyway          | Datenbankmigrationen            |
-| Maven           | Dependency Management und Build |
-| React + Vite    | Frontend Framework              |
-| TypeScript      | Programmiersprache (Frontend)   |
-| Tailwind CSS    | Styling                         |
-| TanStack Query  | Data Fetching & State           |
-| Dnd-kit         | Drag & Drop Library             |
-| jsPDF           | PDF Export                      |
-| JUnit           | Backend Tests                   |
-| Vitest          | Frontend Tests                  |
+| Bereich       | Technologie                                                                  |
+|---------------|------------------------------------------------------------------------------|
+| **Backend**   | Java 21, Spring Boot, Spring Security,Timefold Solver, Hibernate/JPA         |
+| **Frontend**  | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, TanStack Query, dnd-kit |
+| **Datenbank** | PostgreSQL, Flyway (Migrationen)                                             |
+| **Testing**   | JUnit, Timefold ConstraintVerifier, Vitest (Frontend)                        |
+| **DevOps**    | Docker, Docker Compose, GitHub Actions (CI/CD), GHCR                         |
+
 
 Voraussetzung ist **Java > 21** (siehe `pom.xml` → `<java.version>`). Spring Boot 3.x und Timefold 2.x unterstützen beide Versionen. Noch
 dazu **Node.js > 20**.
@@ -92,7 +98,7 @@ src/main/java/dev/ach/dienstplanung
 └── constraint/
     └── Constraints
     
- └── frontend/ (React App)
+ └── dienstplan-frontend/ (React App)
     ├── src/api/         # Axios Clients (mit JWT Interceptor)
     ├── src/hooks/       # TanStack Query Hooks
     ├── src/pages/       # Seiten (Dashboard, Plan, Monat, CRUD, Login)
@@ -230,62 +236,15 @@ mehr im Request-Body.
 | `POST`      | `/dienstplan/solve/{jobId}/stop/`         | Beendet den Solver-Job                        | ADMIN, PLANNER         |
 
 
-## 7. Ablauf der Planung
-```
-                          ┌──────────────────────┐
-                          │     PostgreSQL       │
-                          │  employees           │
-                          │  stations            │
-                          │  timeslots           │
-                          │  assignments         │
-                          └──────────┬───────────┘
-                                     │
-                            (1) ScheduleService.load()
-                                     │
-                                     ▼
-Client ──POST /api/solve──▶  DienstPlanningsService
-                                     │
-                                     ▼
-                            Schedule (Problem)
-                                     │
-                                     ▼
-                            Timefold Solver
-                                     │
-                          ┌──────────┴───────────┐
-                          ▼                      ▼
-                 (2) best solution     (3) ScheduleWriterService
-                     aktualisieren          .writeBack()
-                          │                      │
-                          │                      ▼
-                          │             UPDATE assignment
-                          │             SET employee_id = ...
-                          │                      │
-                          └──────────┬───────────┘
-                                     │
-                                     ▼
-                            Schedule (Lösung)
-                                     │
-                                     ▼
-Client ◀──GET /api/solve/{jobId}──── ScheduleResponse
-```
-1. Der Client ruft ``POST /dienstplan/solve`` ohne Body auf.
-2. ``ScheduleService.load()`` liest alle Fakten und Assignment aus der
-Datenbank und baut ein ``Schedule``-Objekt.
-3. Der Solver läuft im Hintergrund. Bei jeder neuen besten Lösung:
-*wird die aktuelle Lösung im Speicher(``scheduleMap``) aktualisiert,
-* wird ``ScheduleWriterService.writeBack(...)`` aufgerufen, um die
-Mitarbeiterzuordnung in der Tabelle ``assignment`` zu speichern.
-4. Der Client pollt ``GET /dienstplan/solve/{jobId}``, bis ``isSolving == false``.
-
 ---
 
-## 8. Datenbank & Sicherheit
+## 7. Datenbank & Sicherheit
 
 Das Projekt verwendet **PostgreSQL** als Datenbank.
 
 Die Datenbankstruktur wird mit **Flyway** verwaltet.
 
-### 8.1 Schema (übersicht)
+### 7.1 Schema (übersicht)
 | **Tabelle**    | **Spalten**                                                                                                                                                   |
 |----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `app_user`     | `id`, `username`, `password_hash`, `role`, `enabled`                                                                                                          |
@@ -295,85 +254,51 @@ Die Datenbankstruktur wird mit **Flyway** verwaltet.
 | ``assignment`` | ``id (PK, String)``, ``station_id (FK)``,``timeslot_id (FK)``,``employee_id (FK, nullable)``                                                                  |
 Die konkreten Spaltentypen und Constraints sind in den Flyway-Migrationen dokumentiert.
 
-### 8.2 Lösch-Verhalten
+### 7.2 Lösch-Verhalten
 * **Station & Timeslot**: ``ON DELETE CASCADE``. Wenn eine Station gelöscht wird, werden alle zugehörigen Assignments gelöscht.
 * **Employee**: ``ON DELETE RESTRICT``: Ein Mitarbeiter kann nicht gelöscht werden, solange er noch Dienste hat.
 
 ---
-### 8.3 Sicherheit (JWT & RBAC)
+### 7.3 Sicherheit (JWT & RBAC)
 Die API ist stateless. Nach dem Login erhält der Client ein JWT, das im ``Authorization: Bearer`` header mitgesendet wird. Es gibt drei Rollen
 : ``ADMIN``(Vollzugriff), `PLANNER`(Planen/Solver starten, keine Stammdaten ändern) und `VIEWER`(Nur Lesen).
 
 ---
-## 9. Tests
+## 8. CI/CD Pipeline
+Das Projekt nutzt **GitHub Actions** für Continuous Integration und Continuous Deployment
+(`.github/workflows/ci-cd.yml`).
 
-Das Projekt enthält Tests für die verschiedenen Komponenten.
+1. **Backend-Test**: Startet eine PostgreSQL-Datenbank, führt Flyway-Migrationen aus und
+testet den Solver und API mit JUnit.
+2. **Frontend-Test**: Führt ``npm run lint`` und Vitest-Tests aus.
+3. **Build & Push**: Wenn beide Tests grün sind, werden die Docker-Images (Frontend & Backend)
+gebaut und die **GitHub Container Registry (GHCR)** gepusht.
 
-Insbesondere werden getestet:
-
-* REST API
-* Services
-* Constraints
-* Solver
-* Erstellung und Verarbeitung eines Dienstplans
-
-Die Tests können beispielsweise mit Maven ausgeführt werden:
-### Backend(Java)
-
-```bash
-./mvnw clean package
-```
-
-Unter Windows:
-
-```bash
-mvnw.cmd test
-```
-### Frontend (React)
-
-``` bash
-cd frontend
-npm test
-```
 ---
 
-## 10. Voraussetzungen
-Für die lokal Entwicklung werden benötigt:
-* Java 21 oder mehr (siehe ``pom.xml``)
-* Maven (oder Maven Wrapper ``mvnw``/``mvnw.cmd``)
-* PostgreSQL (oder Docker mir Docker Compose)
-* Git
-----
-## 11. Anwendung starten
+## 9. Lokale Installation & Start
+**Voraussetzungen**: Docker & Docker Compose installiert.
+Das gesamte System (Datenbank, Backend, Frontend) ist vollständig dockerisiert.
+Du musst nichts manuell kompilieren.
+
+1. Repository klonen
 ```bash
 git clone <repository-url>
 cd dienstplanung
 ```
-### 11.1 Datenbank starten (Docker)
-
-Falls eine ``compose.yml`` im Repository vorhanden ist:
-```bash
-docker compose up -d
-```
-### 11.2 Backend starten
+2. Alles starten
 
 ```bash
-./mvnw spring-boot:run
+docker compose up -d --build
 ```
-Läuft auf ``http://localhost:8080``
+3. Öffne den browser: ``http://localhost`` (Nginx serviert das Frontend auf Port 80 
+und proxied die API an das Backend)
 
-### 11.3 Frontend starten:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Läuft auf ``http://localhost:5173``
-
+**Login (Dev)**: username: ``admin`` or `planner` or `viewer`,  
+Password:`admin` für `admin`, `planner` für `planner`, und `viewer` für `viewer`.
 ---
 
-## 12. Dokumentation
+## 10. Dokumentation
 
 Weitere technische Informationen befinden sich in den folgenden Dokumenten:
 
@@ -393,9 +318,9 @@ Beschreibung der Hard- und Soft-Constraints und ihrer Bedeutung für die Optimie
 
 ---
 
-## 13. Projektstatus
+## 11. Projektstatus
 
-**Aktueller Stand (V1.0)**
+**Aktueller Stand (V3.0)**
 
 * [x] Domain Model & Planning Model
 * [x] Hard & Soft Constraints
@@ -403,13 +328,16 @@ Beschreibung der Hard- und Soft-Constraints und ihrer Bedeutung für die Optimie
 * [x] REST Controller (CRUD & Solver)
 * [x] Frontend UI (Dashboard, Grid-Ansichten, CRUD-Formulare)
 * [x] Live-Solver Polling & Echtzeit-Score
-* [x] Tests (Backend & Frontend)
 * [x] JWT Authentication & Role-Based Access Control (RBAC)
 * [x] Drag & Drop mit Echtzeit-Validierung (Ruhezeit)
 * [x] Multi-Shift Präferenzen (Listen statt Enum)
 * [x] Monatsplaner & PDF Export (A4)
-* [ ] Deployment (Docker / Cloud)
-* [ ] Schichten über Mitternacht (Night Shift Logic)
+* [x] Schichten über Mitternacht
+* [x] CI/CD Pipeline (GitHub Actions)
+* [x] Docker Compose Deployment (Frontend + Backend + DB)
+* [x] Backend & Frontend Tests
+* [ ] Deployment (VPS / Cloud)
+* [ ] User Management UI (Admin Panel)
 * [ ] 
 
 ---
